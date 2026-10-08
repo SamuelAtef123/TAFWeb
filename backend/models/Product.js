@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
-  name: { type: String, required: true },
+  name: { type: String, required: true, trim: true },
   category: { type: String, enum: ['Bread', 'Beverage', 'Pastries', 'Sandwich', 'Viennoiserie'], required: true },
-  price: { type: Number, required: true },
+  price: { type: Number, required: true, min: 0 },
   description: { type: String },
   image: { type: String }
 });

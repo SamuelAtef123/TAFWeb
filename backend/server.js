@@ -4,6 +4,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
 
+const { notFound, errorHandler } = require('./middleware/errorHandler');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -13,6 +15,10 @@ app.use(express.json());
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/auth', require('./routes/auth'));
+
+// Must come after the routes
+app.use(notFound);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 

@@ -1,18 +1,23 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const Product = require('../models/Product');
-const jwt = require('jsonwebtoken');
+const { authAdmin } = require('../middleware/auth');
 
-const authAdmin = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ message: 'No token' });
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded.isAdmin) return res.status(403).json({ message: 'Not admin' });
-    next();
-  } catch (err) {
-    res.status(401).json({ message: 'Invalid token' });
+const ALLOWED_FIELDS = ['name', 'category', 'price', 'description', 'image'];
+const pickAllowed = body => {
+  const out = {};
+  for (const key of ALLOWED_FIELDS) {
+    if (body[key] !== undefined) out[key] = body[key];
   }
+  return out;
+};
+
+const validateId = (req, res, next) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res.status(400).json({ message: 'Invalid product id' });
+  }
+  next();
 };
 
 router.get('/', async (req, res) => {
@@ -25,18 +30,22 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', authAdmin, async (req, res) => {
-  const product = new Product(req.body);
-  await product.save();
+  const product = await Product.create(pickAllowed(req.body));
   res.status(201).json(product);
 });
 
-router.put('/:id', authAdmin, async (req, res) => {
-  const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+router.put('/:id', authAdmin, validateId, async (req, res) => {
+  const product = await Product.findByIdAndUpdate(req.params.id, pickAllowed(req.body), {
+    new: true,
+    runValidators: true
+  });
+  if (!product) return res.status(404).json({ message: 'Product not found' });
   res.json(product);
 });
 
-router.delete('/:id', authAdmin, async (req, res) => {
-  await Product.findByIdAndDelete(req.params.id);
+router.delete('/:id', authAdmin, validateId, async (req, res) => {
+  const product = await Product.findByIdAndDelete(req.params.id);
+  if (!product) return res.status(404).json({ message: 'Product not found' });
   res.json({ message: 'Product deleted' });
 });
 
