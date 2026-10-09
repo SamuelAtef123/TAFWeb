@@ -1,21 +1,37 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { egp } from '../utils/shop';
 
 function AdminDashboard() {
   const [orders, setOrders] = useState([]);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOrders = async () => {
       const token = localStorage.getItem('adminToken');
-      const { data } = await axios.get('/api/orders', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      setOrders(data);
+      if (!token) {
+        navigate('/admin/login');
+        return;
+      }
+      try {
+        const { data } = await axios.get('/api/orders', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setOrders(data);
+      } catch (err) {
+        if (err.response && [401, 403].includes(err.response.status)) {
+          localStorage.removeItem('adminToken');
+          navigate('/admin/login');
+        } else {
+          setError('Unable to load orders. Is the backend running?');
+        }
+      }
     };
 
     fetchOrders();
-  }, []);
+  }, [navigate]);
 
   return (
     <main className="page-shell dashboard-page">
@@ -51,7 +67,9 @@ function AdminDashboard() {
           <span>{orders.length} total</span>
         </div>
 
-        {orders.length === 0 ? (
+        {error && <p className="error-message">{error}</p>}
+
+        {orders.length === 0 && !error ? (
           <div className="empty-panel">
             <span className="empty-mark">✦</span>
             <h3>No orders just yet.</h3>
@@ -59,15 +77,21 @@ function AdminDashboard() {
           </div>
         ) : (
           <ul className="order-list">
-            {orders.map(order => (
-              <li key={order._id}>
-                <div>
-                  <strong>{order.user.email}</strong>
-                  <span>Order #{order._id.slice(-6)}</span>
-                </div>
-                <strong>${Number(order.total).toFixed(2)}</strong>
-              </li>
-            ))}
+            {orders.map(order => {
+              const items = (order.products || []).reduce((sum, line) => sum + line.quantity, 0);
+              return (
+                <li key={order._id}>
+                  <div>
+                    <strong>{order.user ? order.user.email : 'Deleted account'}</strong>
+                    <span>
+                      Order #{order._id.slice(-6)} · {items} {items === 1 ? 'item' : 'items'} ·{' '}
+                      {new Date(order.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <strong>{egp(order.total)}</strong>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

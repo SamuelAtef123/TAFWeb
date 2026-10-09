@@ -4,7 +4,7 @@
   --espresso: #24140c; --roast: #3b2314; --crust: #8a4b24; --gold: #e0a458;
   --butter: #f4dfae; --flour: #fbf3e4; --latte: #e9d6b8; --paper: #fff9ec;
   font-family: 'DM Sans', Arial, sans-serif; color: var(--espresso);
-  background: var(--flour); overflow-x: hidden;
+  background: var(--flour); overflow-x: hidden; overflow-x: clip;
 }
 .bk h1, .bk h2, .bk h3, .bk-brand { font-family: 'Fraunces', Georgia, serif; font-weight: 400; }
 
