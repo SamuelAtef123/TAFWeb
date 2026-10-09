@@ -308,6 +308,7 @@ function Home() {
       <footer className="bk-footer">
         <span>Tino &amp; Friends Bakery</span>
         <span>Made for slow mornings and shared tables.</span>
+        <span>Photos via <a href="https://pixabay.com" target="_blank" rel="noreferrer">Pixabay</a></span>
       </footer>
     </div>
   );
