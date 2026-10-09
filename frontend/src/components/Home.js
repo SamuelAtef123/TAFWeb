@@ -174,11 +174,10 @@
 // export default Home;
 
 import { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
 import { Link } from 'react-router-dom';
+import BasketMenu from './BasketMenu/BasketMenu';
 import './Home.css';
 
-const CATEGORIES = ['All', 'Bread', 'Beverage', 'Pastries', 'Sandwich', 'Viennoiserie'];
 const MARQUEE = ['Croissants', 'Sourdough', 'Pain au chocolat', 'Brioche', 'Baguette', 'Café crème', 'Éclairs', 'Canelés'];
 const HEADLINE = ['Baked', 'at', 'dawn,', 'still', 'warm', 'when', 'you', 'arrive.'];
 // const FLOUR = Array.from({ length: 28 }, (_, i) => ({
@@ -189,9 +188,6 @@ const HEADLINE = ['Baked', 'at', 'dawn,', 'still', 'warm', 'when', 'you', 'arriv
 // }));
 
 function Home() {
-  const [products, setProducts] = useState([]);
-  const [category, setCategory] = useState('All');
-  const [error, setError] = useState('');
   const [cartCount, setCartCount] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const heroRef = useRef(null);
@@ -202,16 +198,10 @@ function Home() {
   };
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const { data } = await axios.get('/api/products');
-        setProducts(data);
-      } catch (err) {
-        setError(err.response?.data?.message || 'Unable to load products.');
-      }
-    };
-    fetchProducts();
     refreshCartCount();
+    // the basket section announces every change so this header counter stays in sync
+    window.addEventListener('cart:updated', refreshCartCount);
+    return () => window.removeEventListener('cart:updated', refreshCartCount);
   }, []);
 
   useEffect(() => {
@@ -219,9 +209,6 @@ function Home() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
-
-  const filteredProducts =
-    category === 'All' ? products : products.filter(p => p.category === category);
 
   useEffect(() => {
     const els = document.querySelectorAll('.bk [data-reveal]:not(.in)');
@@ -237,25 +224,12 @@ function Home() {
     );
     els.forEach(el => io.observe(el));
     return () => io.disconnect();
-  }, [filteredProducts.length, category]);
+  }, []);
 
   const onMove = e => {
     const r = heroRef.current.getBoundingClientRect();
     heroRef.current.style.setProperty('--mx', ((e.clientX - r.left) / r.width - 0.5).toFixed(3));
     heroRef.current.style.setProperty('--my', ((e.clientY - r.top) / r.height - 0.5).toFixed(3));
-  };
-
-  const addToCart = (product, e) => {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const existingItem = cart.find(item => item._id === product._id);
-    if (existingItem) existingItem.quantity += 1;
-    else cart.push({ ...product, quantity: 1 });
-    localStorage.setItem('cart', JSON.stringify(cart));
-    refreshCartCount();
-    const btn = e.currentTarget;
-    btn.classList.remove('pop');
-    void btn.offsetWidth;
-    btn.classList.add('pop');
   };
 
   return (
@@ -328,63 +302,13 @@ function Home() {
           </div>
         </div>
 
-        <section className="bk-menu" id="menu">
-          <div className="bk-menu-head" data-reveal>
-            <h2>Find your favorite.</h2>
-            <p>From our oven to your table.</p>
-          </div>
-
-          <div className="bk-cats" aria-label="Product categories" data-reveal>
-            {CATEGORIES.map(item => (
-              <button
-                className={category === item ? 'active' : ''}
-                type="button"
-                key={item}
-                onClick={() => setCategory(item)}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-
-          {error && <p className="bk-error" role="alert">{error}</p>}
-
-          {filteredProducts.length === 0 && !error ? (
-            <div className="bk-empty">
-              <span>✦</span>
-              <h3>The oven is warming up.</h3>
-              <p>Nothing here yet. Try another category or check back soon.</p>
-            </div>
-          ) : (
-            <div className="bk-grid">
-              {filteredProducts.map((product, i) => (
-                <article className="bk-card" key={product._id} data-reveal style={{ '--d': `${(i % 3) * 90}ms` }}>
-                  <Link to={`/product/${product._id}`} className="bk-img">
-                    {product.image ? <img src={product.image} alt={product.name} /> : <span>✦</span>}
-                  </Link>
-                  <div className="bk-info">
-                    <p className="bk-cat">{product.category}</p>
-                    <h3>{product.name}</h3>
-                    <p className="bk-price">${Number(product.price).toFixed(2)}</p>
-                  </div>
-                  <button
-                    className="bk-add"
-                    type="button"
-                    onClick={e => addToCart(product, e)}
-                    aria-label={`Add ${product.name} to cart`}
-                  >
-                    +
-                  </button>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+        <BasketMenu />
       </main>
 
       <footer className="bk-footer">
         <span>Tino &amp; Friends Bakery</span>
         <span>Made for slow mornings and shared tables.</span>
+        <span>Photos via <a href="https://pixabay.com" target="_blank" rel="noreferrer">Pixabay</a></span>
       </footer>
     </div>
   );

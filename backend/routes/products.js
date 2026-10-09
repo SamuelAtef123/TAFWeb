@@ -4,7 +4,17 @@ const router = express.Router();
 const Product = require('../models/Product');
 const { authAdmin } = require('../middleware/auth');
 
-const ALLOWED_FIELDS = ['name', 'category', 'price', 'description', 'image'];
+const ALLOWED_FIELDS = [
+  'code',
+  'name',
+  'category',
+  'price',
+  'currency',
+  'description',
+  'image',
+  'featured',
+  'available'
+];
 const pickAllowed = body => {
   const out = {};
   for (const key of ALLOWED_FIELDS) {
@@ -27,6 +37,16 @@ router.get('/', async (req, res) => {
   } catch (error) {
     res.status(503).json({ message: 'Product service is unavailable' });
   }
+});
+
+// One product, by Mongo id OR by menu code (e.g. /api/products/COL001)
+router.get('/:idOrCode', async (req, res) => {
+  const { idOrCode } = req.params;
+  const product = mongoose.isValidObjectId(idOrCode)
+    ? await Product.findById(idOrCode)
+    : await Product.findOne({ code: String(idOrCode).toUpperCase() });
+  if (!product) return res.status(404).json({ message: 'Product not found' });
+  res.json(product);
 });
 
 router.post('/', authAdmin, async (req, res) => {

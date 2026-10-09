@@ -1,0 +1,22 @@
+# dependencies
+node_modules/
+
+# secrets - never commit these (copy backend/.env.example to backend/.env instead)
+.env
+.env.*
+!.env.example
+
+# build output
+build/
+dist/
+coverage/
+
+# logs
+*.log
+npm-debug.log*
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

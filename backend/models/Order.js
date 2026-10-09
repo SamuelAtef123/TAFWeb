@@ -7,6 +7,7 @@ const orderSchema = new mongoose.Schema({
     quantity: { type: Number, required: true, min: 1 }
   }],
   total: { type: Number, required: true, min: 0 },
+  currency: { type: String, default: 'EGP' },
   status: { type: String, default: 'Pending' },
   createdAt: { type: Date, default: Date.now }
 });

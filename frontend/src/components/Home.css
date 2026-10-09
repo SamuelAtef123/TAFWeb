@@ -4,7 +4,7 @@
   --espresso: #24140c; --roast: #3b2314; --crust: #8a4b24; --gold: #e0a458;
   --butter: #f4dfae; --flour: #fbf3e4; --latte: #e9d6b8; --paper: #fff9ec;
   font-family: 'DM Sans', Arial, sans-serif; color: var(--espresso);
-  background: var(--flour); overflow-x: hidden;
+  background: var(--flour); overflow-x: hidden; overflow-x: clip;
 }
 .bk h1, .bk h2, .bk h3, .bk-brand { font-family: 'Fraunces', Georgia, serif; font-weight: 400; }
 
@@ -96,6 +96,7 @@
 .bk-empty span { color: var(--crust); font-size: 26px; }
 .bk-error { color: #a1321a; }
 .bk-footer { display: flex; justify-content: space-between; gap: 16px; padding: 30px max(28px, calc((100% - 1160px) / 2)); background: var(--espresso); color: var(--latte); font-size: 13px; }
+.bk-footer a { color: var(--gold); text-underline-offset: 3px; }
 
 /* the one scroll reveal: menu items */
 [data-reveal] { opacity: 0; transform: translateY(26px); transition: opacity .7s var(--d, 0ms), transform .7s var(--d, 0ms); }
