@@ -10,7 +10,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 */
 
 const VOICE_KEY = 'tino-voice'; // 'on' | 'off'
-const PITCH = 1.75; // 0..2 - higher sounds younger
+const PITCH = 1.05; // 0..2 - higher sounds younger
 const RATE = 1.06;
 
 const supported = () =>
