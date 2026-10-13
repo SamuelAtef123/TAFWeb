@@ -176,6 +176,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import BasketMenu from './BasketMenu/BasketMenu';
+import Mascot from './Mascot/Mascot';
 import './Home.css';
 
 const MARQUEE = ['Croissants', 'Sourdough', 'Pain au chocolat', 'Brioche', 'Baguette', 'Café crème', 'Éclairs', 'Canelés'];
@@ -267,7 +268,7 @@ function Home() {
             </div>
             <div className="bk-arch" aria-hidden="true" /> */}
 
-            <div className="bk-hero-logo-wrap" aria-label="Tino & Friends bakery mascot" role="img">
+            <div className="bk-hero-logo-wrap">
               <img
                 className="bk-hero-logo"
                 src="/Logo3.png"
@@ -304,6 +305,8 @@ function Home() {
 
         <BasketMenu />
       </main>
+
+      <Mascot />
 
       <footer className="bk-footer">
         <span>Tino &amp; Friends Bakery</span>

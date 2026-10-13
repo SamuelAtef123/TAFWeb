@@ -1,0 +1,381 @@
+/* ===================== Tino, the 2.5D paper-cut mascot ===================== */
+
+/* --- the hero logo: lettering-only copy shown while Tino is out of it --- */
+.bk-hero-logo-wrap > img.bk-hero-logo {
+  transition: opacity 0.35s ease;
+}
+.bk-hero-logo-wrap > img.tino-lettering {
+  position: absolute;
+  max-width: none;
+  opacity: 0;
+  pointer-events: none;
+}
+.bk-hero-logo-wrap.tino-out > img.bk-hero-logo:not(.tino-lettering) {
+  opacity: 0;
+}
+.bk-hero-logo-wrap.tino-out > img.tino-lettering {
+  opacity: 1;
+}
+
+/* --- where he stands --- */
+.tino-logo-frame {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+}
+.tino-slot {
+  position: absolute;
+}
+.tino-dock {
+  position: fixed;
+  left: 18px;
+  bottom: 12px;
+  z-index: 30;
+  height: min(178px, 22vh);
+  aspect-ratio: 436 / 800;
+}
+
+.tino-travel {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+}
+
+/* --- the figure --- */
+.tino-fig {
+  --rx: 0deg;
+  --ry: 0deg;
+  position: absolute;
+  inset: 0;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+.tino-fig:focus-visible {
+  outline: 3px solid #e0a458;
+  outline-offset: 6px;
+  border-radius: 14px;
+}
+.tino-ground {
+  position: absolute;
+  left: 16%;
+  right: 8%;
+  bottom: -2%;
+  height: 6%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.42), transparent);
+}
+.tino-persp {
+  position: absolute;
+  inset: 0;
+  perspective: 700px;
+  filter: drop-shadow(0 7px 9px rgba(20, 8, 2, 0.32));
+}
+.tino-act,
+.tino-rig,
+.tino-breath {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform-origin: 57% 97%; /* his feet */
+}
+.tino-rig {
+  transform: rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.tino-breath {
+  animation: tino-breathe 3.6s ease-in-out infinite;
+}
+/* the paper's thickness: three stacked silhouettes behind him, visible when he turns */
+.tino-edge {
+  position: absolute;
+  inset: 0;
+  /* the silhouette image comes in through --tino-mask (set in Mascot.js) */
+  -webkit-mask: var(--tino-mask) center / 100% 100% no-repeat;
+  mask: var(--tino-mask) center / 100% 100% no-repeat;
+}
+.tino-edge.e1 {
+  background: #e3d3b0;
+  transform: translateZ(-2px);
+}
+.tino-edge.e2 {
+  background: #c9b189;
+  transform: translateZ(-4px);
+}
+.tino-edge.e3 {
+  background: #a68c62;
+  transform: translateZ(-6px);
+}
+.tino-body,
+.tino-head {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.tino-head {
+  transform-origin: 47% 26.8%; /* his neck */
+  animation: tino-sway 5.4s ease-in-out infinite;
+}
+.tino-fig.is-talking .tino-head {
+  animation: tino-talk 0.34s ease-in-out infinite alternate;
+}
+.tino-fig.is-talking .tino-breath {
+  animation: tino-chatter 0.68s ease-in-out infinite;
+}
+.tino-fig:hover .tino-rig {
+  transform: rotateX(var(--rx)) rotateY(var(--ry)) translateY(-1.5%);
+}
+
+@keyframes tino-breathe {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(0.996, 1.012); }
+}
+@keyframes tino-sway {
+  0%, 100% { transform: rotate(-1.2deg); }
+  50% { transform: rotate(1.4deg); }
+}
+@keyframes tino-talk {
+  from { transform: rotate(-2.4deg) translateY(0); }
+  to { transform: rotate(2deg) translateY(-0.5%); }
+}
+@keyframes tino-chatter {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-0.8%); }
+}
+
+/* one-off moves (the element is re-created each time, so they restart) */
+.tino-act[data-act='alive'] { animation: tino-alive 1.25s cubic-bezier(0.3, 0.8, 0.3, 1); }
+.tino-act[data-act='hop'] { animation: tino-hop 0.62s cubic-bezier(0.3, 0.8, 0.4, 1); }
+.tino-act[data-act='wave'] { animation: tino-wave 1s ease-in-out; }
+.tino-act[data-act='look'] { animation: tino-look 1.8s ease-in-out; }
+
+@keyframes tino-alive {
+  0% { transform: none; }
+  18% { transform: translateZ(20px) scale(1.04); }
+  42% { transform: translateY(-9%) translateZ(30px) rotate(-3deg) scale(1.04); }
+  66% { transform: translateY(0) scale(1.06, 0.93); }
+  82% { transform: scale(0.98, 1.03); }
+  100% { transform: none; }
+}
+@keyframes tino-hop {
+  0% { transform: none; }
+  30% { transform: translateY(-7%) scale(0.97, 1.04); }
+  60% { transform: translateY(0) scale(1.05, 0.95); }
+  80% { transform: scale(0.99, 1.01); }
+  100% { transform: none; }
+}
+@keyframes tino-wave {
+  0%, 100% { transform: none; }
+  20% { transform: rotate(-6deg); }
+  45% { transform: rotate(5deg); }
+  70% { transform: rotate(-4deg); }
+  88% { transform: rotate(2deg); }
+}
+@keyframes tino-look {
+  0%, 100% { transform: none; }
+  25% { transform: rotateY(-28deg); }
+  60% { transform: rotateY(24deg); }
+}
+
+/* --- speech bubble --- */
+.tino-bubble {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 35;
+  width: min(300px, calc(100vw - 24px));
+  visibility: hidden;
+  will-change: transform;
+}
+.tino-bubble-in {
+  position: relative;
+  padding: 15px 18px 15px;
+  border-radius: 20px;
+  background: #fffaf0;
+  color: #24140c;
+  box-shadow: 0 18px 40px rgba(36, 20, 12, 0.3), 0 0 0 1px rgba(138, 75, 36, 0.16);
+  font: 400 15px/1.5 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  animation: tino-pop 0.38s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.tino-bubble-in::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #fffaf0;
+  box-shadow: -1px 1px 0 rgba(138, 75, 36, 0.12);
+  transform: rotate(45deg);
+}
+.tino-bubble[data-side='right'] .tino-bubble-in { transform-origin: 0 30%; }
+.tino-bubble[data-side='right'] .tino-bubble-in::before { left: -7px; top: 26px; }
+.tino-bubble[data-side='left'] .tino-bubble-in { transform-origin: 100% 30%; }
+.tino-bubble[data-side='left'] .tino-bubble-in::before { right: -7px; top: 26px; box-shadow: 1px -1px 0 rgba(138, 75, 36, 0.12); }
+.tino-bubble[data-side='up'] .tino-bubble-in { transform-origin: 40px 100%; }
+.tino-bubble[data-side='up'] .tino-bubble-in::before { left: 40px; bottom: -7px; }
+.tino-bubble[data-side='down'] .tino-bubble-in { transform-origin: 50% 0; }
+.tino-bubble[data-side='down'] .tino-bubble-in::before { left: calc(50% - 8px); top: -7px; }
+@keyframes tino-pop {
+  from { opacity: 0; transform: scale(0.82) translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.tino-name {
+  display: block;
+  margin-bottom: 2px;
+  font: 700 11px 'DM Sans', system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8a4b24;
+}
+.tino-text {
+  margin: 0 22px 0 0;
+  min-height: 1.5em;
+  cursor: default;
+}
+.tino-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.12em;
+  background: #8a4b24;
+  animation: tino-blink 0.8s steps(1) infinite;
+}
+@keyframes tino-blink {
+  50% { opacity: 0; }
+}
+.tino-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+}
+.tino-replies.show {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.tino-replies button {
+  padding: 7px 13px;
+  border: 1px solid #e9d6b8;
+  border-radius: 999px;
+  background: #fff;
+  color: #3b2314;
+  font: 600 13px 'DM Sans', system-ui, sans-serif;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+.tino-replies button:first-child {
+  border-color: #3b2314;
+  background: #3b2314;
+  color: #f4dfae;
+}
+.tino-replies button:hover {
+  transform: translateY(-1px);
+  border-color: #e0a458;
+  background: #f4dfae;
+  color: #24140c;
+}
+.tino-replies button:focus-visible,
+.tino-x:focus-visible,
+.tino-recall:focus-visible {
+  outline: 3px solid #e0a458;
+  outline-offset: 2px;
+}
+.tino-x {
+  position: absolute;
+  top: 8px;
+  right: 9px;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #8a4b24;
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+}
+.tino-x:hover {
+  background: #f4dfae;
+}
+.tino-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* --- "bring Tino back" button --- */
+.tino-recall {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px 4px 4px;
+  border: 0;
+  border-radius: 999px;
+  background: #24140c;
+  color: #f4dfae;
+  font: 700 13px 'DM Sans', system-ui, sans-serif;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  animation: tino-pop 0.4s cubic-bezier(0.3, 1.5, 0.5, 1);
+  transition: transform 0.2s;
+}
+.tino-recall:hover {
+  transform: translateY(-2px);
+}
+.tino-recall img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 47% 10%;
+  background: #fbf3e4;
+}
+
+@media (max-width: 640px) {
+  .tino-dock {
+    left: 8px;
+    bottom: 8px;
+    height: 112px;
+  }
+  .tino-bubble-in {
+    font-size: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tino-breath,
+  .tino-head,
+  .tino-fig.is-talking .tino-head,
+  .tino-fig.is-talking .tino-breath,
+  .tino-act,
+  .tino-bubble-in,
+  .tino-recall {
+    animation: none !important;
+  }
+  .tino-rig {
+    transform: none;
+    transition: none;
+  }
+}
