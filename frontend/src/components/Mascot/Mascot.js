@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { LINES, CATEGORY_LINES, pick } from './lines';
+import useVoice from './useVoice';
 import './Mascot.css';
 
 /*
@@ -97,27 +98,35 @@ function Figure({ figRef, travelRef, act, talking, onPoke, label }) {
 
 /* ---------------- typewriter text ---------------- */
 function useTypewriter(text, speed = 24) {
-  const [n, setN] = useState(0);
+  // progress is stored together with the text it belongs to, so a new line never
+  // inherits the previous line's progress (that caused a one-frame flash of the full text)
+  const [prog, setProg] = useState({ text, n: 0 });
+  const chars = text ? [...text] : [];
+  const n = prog.text === text ? prog.n : 0;
   useEffect(() => {
-    setN(0);
     if (!text) return undefined;
+    const all = [...text];
     if (reducedMotion()) {
-      setN(text.length);
+      setProg({ text, n: all.length });
       return undefined;
     }
-    const chars = [...text];
     let i = 0;
+    setProg({ text, n: 0 });
     const id = setInterval(() => {
-      i += chars[i] === ' ' ? 2 : 1;
-      setN(Math.min(i, chars.length));
-      if (i >= chars.length) clearInterval(id);
+      i += all[i] === ' ' ? 2 : 1;
+      setProg({ text, n: Math.min(i, all.length) });
+      if (i >= all.length) clearInterval(id);
     }, speed);
     return () => clearInterval(id);
   }, [text, speed]);
-  const chars = text ? [...text] : [];
-  return { shown: chars.slice(0, n).join(''), done: n >= chars.length, finish: () => setN(chars.length) };
+  return {
+    shown: chars.slice(0, n).join(''),
+    done: n >= chars.length,
+    finish: () => setProg({ text, n: chars.length }),
+  };
 }
 
+/* ---------------- the component ---------------- */
 export default function Mascot() {
   const navigate = useNavigate();
   // waiting -> hero | dock ; away = sent away by the visitor
@@ -143,7 +152,35 @@ export default function Mascot() {
   sayRef.current = say;
 
   const typing = useTypewriter(say ? say.text : '');
-  const talking = !!say && !typing.done;
+  const voice = useVoice();
+  const talking = !!say && (!typing.done || voice.speaking); // his head keeps nodding while he speaks
+
+  // say each new line out loud (when the voice is on and the visitor has interacted with the page)
+  const voiceRef = useRef(voice);
+  voiceRef.current = voice;
+  const sayKey = say ? say.key : null;
+  useEffect(() => {
+    const v = voiceRef.current;
+    if (sayKey == null) {
+      v.stop();
+      return;
+    }
+    if (sayRef.current) v.speak(sayRef.current.text, sayKey);
+  }, [sayKey]);
+
+  // the speaker button in the bubble: unmute / play a line that was blocked / mute
+  const onVoiceButton = () => {
+    if (!say) return;
+    if (!voice.on) {
+      voice.setOn(true);
+      voice.speak(say.text, say.key, { force: true });
+    } else if (voice.spokenKey !== say.key) {
+      voice.speak(say.text, say.key, { force: true });
+    } else {
+      voice.setOn(false);
+    }
+  };
+  const voiceState = !voice.on ? 'off' : say && voice.spokenKey !== say.key ? 'tap' : 'on';
 
   /* ---------- small helpers ---------- */
   const hush = useCallback(() => {
@@ -693,6 +730,19 @@ export default function Mascot() {
                     </button>
                   ))}
                 </div>
+              )}
+              {voice.supported && (
+                <button
+                  type="button"
+                  className={`tino-voice is-${voiceState}`}
+                  onClick={onVoiceButton}
+                  aria-label={
+                    voiceState === 'off' ? "Turn Tino's voice on" : voiceState === 'tap' ? 'Hear Tino say this' : "Mute Tino's voice"
+                  }
+                  title={voiceState === 'off' ? 'Voice off' : voiceState === 'tap' ? 'Tap to hear Tino' : 'Mute'}
+                >
+                  {voiceState === 'off' ? '🔇' : '🔊'}
+                </button>
               )}
               <button type="button" className="tino-x" onClick={hush} aria-label="Close">
                 ×
