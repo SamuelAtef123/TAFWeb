@@ -522,9 +522,28 @@ export default function BasketMenu() {
     };
   };
 
+  // 3D Tino (when he is on screen) can run over, grab the treat and carry it to the basket himself.
+  // He calls `drop()` when it lands (or straight away if anything interrupts him).
+  const askTino = (product, el) => {
+    let accepted = false;
+    let dropped = false;
+    const drop = () => {
+      if (dropped) return;
+      dropped = true;
+      commit(product, mouthPoint());
+    };
+    window.dispatchEvent(
+      new CustomEvent('tino:deliver', {
+        detail: { product, el, mouth: mouthRef.current, accept: () => { accepted = true; }, drop },
+      })
+    );
+    return accepted;
+  };
+
   // tap "+" / Enter on a card: fly the product from the card photo into the basket
   const quickAdd = (product, el) => {
     if (!product.available) return;
+    if (askTino(product, el)) return;
     const r = el.getBoundingClientRect();
     landGhost(product, {
       x: r.left + r.width / 2,
@@ -540,7 +559,10 @@ export default function BasketMenu() {
     const pool = open.filter(p => p.featured && !inCart.has(p.id));
     const list = pool.length ? pool : open;
     const p = list[(Math.random() * list.length) | 0];
-    const r = e.currentTarget.getBoundingClientRect();
+    if (!p) return;
+    const btn = e.currentTarget;
+    if (askTino(p, btn)) return;
+    const r = btn.getBoundingClientRect();
     landGhost(p, { x: r.left + r.width / 2, y: r.top + r.height / 2, scale: 0.8, rot: -10 });
   };
 

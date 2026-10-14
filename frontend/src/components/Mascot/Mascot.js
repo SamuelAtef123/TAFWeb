@@ -16,7 +16,12 @@ import './Mascot.css';
   - "Bye, Tino" sends him away for this visit; a small button brings him back.
 
   It only needs these hooks on the page: .bk-hero, .bk-hero-logo-wrap > img.bk-hero-logo,
-  #menu, .bk-footer, .bm-surprise and the `cart:updated` window event.
+  #menu, .bk-footer, .bm-surprise, .bk-marquee and the `cart:updated` / `tino:deliver` window events.
+
+  When the browser can draw 3D, a real 3D Tino (three/Companion.js, loaded on demand) joins him:
+  he hides behind the 2.5D Tino in the logo, peeks out, shows off some acrobatics, surfs down the
+  marquee to the corner when you scroll, and carries orders to the basket himself.
+  The 2.5D Tino then stays in the logo. Without WebGL everything works exactly as before.
 */
 
 const APPEAR_AFTER = 10000; // first visit
@@ -49,6 +54,11 @@ const reducedMotion = () =>
   window.matchMedia &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isNarrow = () => window.innerWidth < 640;
+const NO_3D_KEY = 'tino-2d'; // sessionStorage: set to '1' to keep only the 2.5D Tino
+const IDLE_3D = ['wiggle', 'sniff', 'spin', 'hop', 'wave'];
+const ignoreCancel = e => {
+  if (e !== 'tino-cancelled') throw e;
+};
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 const readCart = () => {
@@ -148,12 +158,63 @@ export default function Mascot() {
   const busyUntil = useRef(0); // a real conversation is going on until this time
   const autoTimer = useRef(0);
   const quietSurprise = useRef(false);
+  const compRef = useRef(null); // the 3D Tino, once loaded
+  const [has3D, setHas3D] = useState(false);
+  const has3DRef = useRef(false);
+  const pokeRef = useRef(() => {});
+  const playfulLeft = useRef(10); // playful remarks per page view
   modeRef.current = mode;
+  has3DRef.current = has3D;
   sayRef.current = say;
 
   const typing = useTypewriter(say ? say.text : '');
   const voice = useVoice();
   const talking = !!say && (!typing.done || voice.speaking); // his head keeps nodding while he speaks
+
+  /* ---------- load the 3D Tino (in the background, only if the browser can draw it) ---------- */
+  useEffect(() => {
+    if (store.get(NO_3D_KEY)) return undefined;
+    let cancelled = false;
+    const t = setTimeout(() => {
+      import('./three/Companion')
+        .then(async ({ default: Companion, webglOK }) => {
+          if (cancelled || !webglOK()) return;
+          const c = await Companion.create({ onPoke: () => pokeRef.current(), reduced: reducedMotion() });
+          if (cancelled) {
+            c.destroy();
+            return;
+          }
+          compRef.current = c;
+          setHas3D(true);
+        })
+        .catch(() => {
+          /* no 3D: the 2.5D Tino does everything on his own */
+        });
+    }, 1500);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+      if (compRef.current) compRef.current.destroy();
+      compRef.current = null;
+    };
+  }, []);
+
+  // 3D Tino's mouth-less "talking" bounce
+  useEffect(() => {
+    if (compRef.current) compRef.current.setTalking(talking);
+  }, [talking, has3D]);
+
+  // where the 2.5D Tino is (3D Tino hides behind him / stands next to him)
+  const figRect = useCallback(() => (figRef.current ? figRef.current.getBoundingClientRect() : null), []);
+
+  // the 3D Tino finished loading after the 2.5D one was already out: bring him in too
+  useEffect(() => {
+    const c = compRef.current;
+    if (!has3D || !c || c.where !== 'hidden') return;
+    const m = modeRef.current;
+    if (m === 'hero') c.toHero(figRect).catch(ignoreCancel);
+    else if (m === 'dock') c.dropIn().catch(ignoreCancel);
+  }, [has3D, figRect]);
 
   // say each new line out loud (when the voice is on and the visitor has interacted with the page)
   const voiceRef = useRef(voice);
@@ -191,6 +252,14 @@ export default function Mascot() {
 
   const doAct = useCallback(name => {
     if (reducedMotion() && name !== 'idle') return;
+    const c = compRef.current;
+    if (has3DRef.current && c) {
+      // the 3D Tino does the moving; the 2.5D one in the logo only wakes up / looks around
+      if (name === 'hop') c.trick('hop').catch(ignoreCancel);
+      else if (name === 'wave') c.trick('wave').catch(ignoreCancel);
+      else if (name === 'look') c.trick(pick(IDLE_3D)).catch(ignoreCancel);
+      if (name !== 'alive' && name !== 'look') return;
+    }
     setAct(a => ({ name, n: a.n + 1 }));
   }, []);
 
@@ -220,9 +289,17 @@ export default function Mascot() {
   );
 
   const goTo = useCallback(next => {
+    const c = compRef.current;
+    if (has3DRef.current && c) {
+      // the 2.5D Tino stays in the logo; the 3D one travels
+      setMode(next);
+      if (next === 'dock') c.viaMarquee().catch(ignoreCancel);
+      if (next === 'hero') c.toHero(figRect).catch(ignoreCancel);
+      return;
+    }
     if (figRef.current) travelFrom.current = figRef.current.getBoundingClientRect();
     setMode(next);
-  }, []);
+  }, [figRect]);
 
   /* ---------- find the hero logo ---------- */
   useEffect(() => {
@@ -271,6 +348,30 @@ export default function Mascot() {
     const t = setTimeout(() => {
       store.set(MET_KEY, '1');
       const inHero = heroVisible.current && !!document.querySelector('.bk-hero-logo-wrap');
+      const c = compRef.current;
+      if (c && has3DRef.current) {
+        if (inHero) {
+          setMode('hero');
+          doAct('alive');
+          // the 3D Tino peeks out from behind the 2.5D one, says hi, shows off, then welcomes you
+          const cue = name => {
+            if (name === 'peek') speak(pick(LINES.peek), { auto: 2400 });
+            if (name === 'hello') speak(LINES.hello3d, { auto: 2200 });
+            if (name === 'watch') {
+              speak(LINES.watch, { auto: 1600 });
+              return new Promise(r => setTimeout(r, 450));
+            }
+            if (name === 'welcome') speak(met ? LINES.welcomeBack : LINES.welcome);
+            return null;
+          };
+          setTimeout(() => c.intro(figRect, cue).catch(ignoreCancel), reducedMotion() ? 100 : 1100);
+        } else {
+          setMode('dock');
+          c.dropIn().catch(ignoreCancel);
+          setTimeout(() => speak(met ? LINES.welcomeBack : LINES.helloDock), reducedMotion() ? 0 : 900);
+        }
+        return;
+      }
       if (inHero) {
         setMode('hero');
         doAct('alive');
@@ -282,7 +383,7 @@ export default function Mascot() {
       }
     }, met ? APPEAR_AGAIN : APPEAR_AFTER);
     return () => clearTimeout(t);
-  }, [mode, speak, doAct]);
+  }, [mode, speak, doAct, figRect]);
 
   /* ---------- hop between the logo and the corner while scrolling ---------- */
   useEffect(() => {
@@ -297,6 +398,7 @@ export default function Mascot() {
         if (r < 0.35) heroVisible.current = false;
         if (r >= 0.55) heroVisible.current = true;
         const m = modeRef.current;
+        if (has3DRef.current) return; // the 3D Tino uses the scroll check above
         if (m === 'hero' && r < 0.35) {
           setSay(null);
           goTo('dock');
@@ -310,6 +412,37 @@ export default function Mascot() {
     io.observe(el);
     return () => io.disconnect();
   }, [goTo]);
+
+  // 3D Tino follows the logo Tino itself: as soon as it scrolls out of view he heads for the corner
+  // (on phones the hero is tall, so the hero box alone can stay "visible" long after the logo is gone)
+  useEffect(() => {
+    if (!has3D) return undefined;
+    let raf = 0;
+    const check = () => {
+      raf = 0;
+      const r = figRect();
+      const m = modeRef.current;
+      if (!r || !r.height) return;
+      const vh = window.innerHeight;
+      const gone = r.bottom < 70 + r.height * 0.25 || r.top > vh;
+      const back = r.top > 50 && r.bottom < vh + r.height * 0.1;
+      if (m === 'hero' && gone) {
+        setSay(null);
+        goTo('dock');
+      } else if (m === 'dock' && back) {
+        setSay(null);
+        goTo('hero');
+      }
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(check);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, [has3D, figRect, goTo]);
 
   // a line the first time each section shows up while he is in the corner
   useEffect(() => {
@@ -420,13 +553,25 @@ export default function Mascot() {
     let t;
     const loop = () => {
       t = setTimeout(() => {
-        if (!sayRef.current) doAct(pick(['look', 'look', 'hop', 'wave']));
+        const c = compRef.current;
+        const free = !sayRef.current && Date.now() > busyUntil.current;
+        if (has3D && c && free && !c.busy && (c.where === 'hero' || c.where === 'dock')) {
+          // the 3D Tino keeps the place lively: a joke and a trick
+          if (playfulLeft.current > 0 && Math.random() < 0.75) {
+            playfulLeft.current -= 1;
+            const line = pick(LINES.playful);
+            speak({ text: line.text, replies: [] }, { auto: 4200 });
+            c.trick(line.move).catch(ignoreCancel);
+          } else {
+            c.trick(pick(IDLE_3D)).catch(ignoreCancel);
+          }
+        } else if (free) doAct(pick(['look', 'look', 'hop', 'wave']));
         loop();
-      }, 7000 + Math.random() * 7000);
+      }, has3D ? 11000 + Math.random() * 8000 : 7000 + Math.random() * 7000);
     };
     loop();
     return () => clearTimeout(t);
-  }, [mode, doAct]);
+  }, [mode, doAct, has3D, speak]);
 
   // if the basket is still empty after a while in the menu, offer to help (once)
   useEffect(() => {
@@ -495,13 +640,29 @@ export default function Mascot() {
         if (cat) remark(CATEGORY_LINES[cat], [], 4200);
       }
     };
+    // the menu asks: "can Tino carry this one?" (see BasketMenu askTino)
+    const onDeliver = e => {
+      const c = compRef.current;
+      const { product, el, mouth, accept, drop } = e.detail || {};
+      if (!c || !has3DRef.current || c.busy || reducedMotion()) return;
+      if (modeRef.current !== 'dock' && modeRef.current !== 'hero') return;
+      if (!el || !mouth) return;
+      const r = el.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight) return;
+      accept();
+      busyUntil.current = 0;
+      speak({ text: LINES.carrying(product.name), replies: [] }, { auto: 4000 });
+      c.deliver(el, product.image, mouth, { onDrop: drop }).catch(ignoreCancel);
+    };
     window.addEventListener('cart:updated', onCart);
+    window.addEventListener('tino:deliver', onDeliver);
     document.addEventListener('click', onClick);
     return () => {
       window.removeEventListener('cart:updated', onCart);
+      window.removeEventListener('tino:deliver', onDeliver);
       document.removeEventListener('click', onClick);
     };
-  }, [remark, doAct]);
+  }, [remark, doAct, speak]);
 
   /* ---------- the quick-reply buttons ---------- */
   const scrollToMenu = () => {
@@ -555,6 +716,10 @@ export default function Mascot() {
           setSay(null);
           store.set(AWAY_KEY, '1');
           setMode('away');
+          if (compRef.current) {
+            compRef.current.newRun();
+            compRef.current.show(false);
+          }
         }, reducedMotion() ? 0 : 1500);
         break;
       default:
@@ -573,9 +738,19 @@ export default function Mascot() {
     doAct('hop');
   };
 
+  pokeRef.current = poke;
+
   const comeBack = () => {
     store.set(AWAY_KEY, null);
     const inHero = heroVisible.current && !!document.querySelector('.bk-hero-logo-wrap');
+    const c = compRef.current;
+    if (c && has3DRef.current) {
+      setMode(inHero ? 'hero' : 'dock');
+      doAct('alive');
+      (inHero ? c.toHero(figRect) : c.dropIn()).catch(ignoreCancel);
+      setTimeout(() => speak(LINES.back, { conversation: true }), reducedMotion() ? 0 : 1000);
+      return;
+    }
     if (!inHero) travelFrom.current = 'below';
     setMode(inHero ? 'hero' : 'dock');
     doAct(inHero ? 'alive' : 'hop');
@@ -599,8 +774,10 @@ export default function Mascot() {
       raf = requestAnimationFrame(place);
       const b = bubbleRef.current;
       const f = figRef.current;
-      if (!b || !f) return;
-      const r = f.getBoundingClientRect();
+      const c = compRef.current;
+      // speak from the 3D Tino when he is out, otherwise from the 2.5D one
+      const r = (has3DRef.current && c && c.rect()) || (f && f.getBoundingClientRect());
+      if (!b || !r) return;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const bw = b.offsetWidth;
@@ -644,7 +821,7 @@ export default function Mascot() {
       figRef={figRef}
       travelRef={travelRef}
       act={act}
-      talking={talking}
+      talking={talking && !has3D}
       onPoke={poke}
       label="Tino, the bakery mascot. Click to talk."
     />
@@ -668,7 +845,7 @@ export default function Mascot() {
         )}
 
       {/* Tino inside the hero logo */}
-      {mode === 'hero' &&
+      {(mode === 'hero' || (has3D && mode === 'dock')) &&
         hero &&
         frame &&
         createPortal(
@@ -699,7 +876,7 @@ export default function Mascot() {
         )}
 
       {/* Tino in the corner */}
-      {mode === 'dock' && createPortal(<div className="tino-slot tino-dock">{figure}</div>, document.body)}
+      {mode === 'dock' && !has3D && createPortal(<div className="tino-slot tino-dock">{figure}</div>, document.body)}
 
       {/* speech bubble */}
       {out &&

@@ -73,6 +73,44 @@ export const LINES = {
     ]),
   cta: 'Follow me — the good stuff is down here! 🥐',
   surpriseClick: 'Ooh, a surprise! I love surprises. 🎁',
+
+  // ---- 3D Tino ----
+  peek: [
+    { text: 'Psst… hey! Over here! 👀', replies: [] },
+    { text: 'Boo! 😄 Did I scare you?', replies: [] },
+    { text: 'Hehe… peekaboo! 🙈', replies: [] },
+  ],
+  hello3d: { text: "Hi there! I'm Tino! 👋", replies: [] },
+  watch: { text: 'Watch this! 🤸', replies: [] },
+  welcome: {
+    text: 'Welcome to Tino & Friends! 🥐 Everything here is baked fresh every morning. Hungry?',
+    replies: [R.menu, R.surprise, R.how, R.who],
+  },
+  // little things he says (with a trick) while you look around
+  playful: [
+    { text: "I'm on a roll today! 🥖 Get it? A ROLL!", move: 'cartwheel' },
+    { text: 'Butter late than never! 🧈', move: 'spin' },
+    { text: "Don't mind me, just practising my moves. 🕺", move: 'dance' },
+    { text: 'Sniff sniff… something smells amazing! 👃', move: 'sniff' },
+    { text: 'I just did a backflip and nobody clapped. 😢', move: 'backflip' },
+    { text: 'Tap + on any treat and I’ll deliver it to your basket myself! 🧺', move: 'wave' },
+    { text: 'Knead a hand choosing? Tap me! 🙋', move: 'wiggle' },
+    { text: 'Is it just me, or is it getting crusty in here? 🍞', move: 'frontflip' },
+    { text: 'You look like someone who deserves a treat today. 😌', move: 'tada' },
+    { text: 'Whoa… too many flips. The room is spinning! 😵', move: 'dizzy' },
+    { text: "I'm doughing my best! 💪", move: 'cheer' },
+    { text: 'Fun fact: I never skip breakfast. Or second breakfast. 🥐', move: 'bow' },
+  ],
+  // while he carries an order to the basket
+  carrying: name =>
+    pick([
+      `Special delivery! One ${name}, coming right up! 🏃`,
+      `Don't worry, I won't eat the ${name}… probably. 😋`,
+      'Balancing act! 🎪 Nobody sneeze!',
+      `Hot! Hot! Hot! Fresh ${name} coming through! 🔥`,
+      'Beep beep! Tino Express! 🚚',
+      `Got it! This ${name} is riding first class. ✨`,
+    ]),
 };
 
 // Said when someone taps a category chip in the menu.
