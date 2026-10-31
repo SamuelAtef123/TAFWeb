@@ -179,6 +179,9 @@ import BasketMenu from './BasketMenu/BasketMenu';
 import Mascot from './Mascot/Mascot';
 import './Home.css';
 
+// phones get the smaller hero video
+const SMALL_SCREEN = typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+
 const MARQUEE = ['Croissants', 'Sourdough', 'Pain au chocolat', 'Brioche', 'Baguette', 'Café crème', 'Éclairs', 'Canelés'];
 const HEADLINE = ['Baked', 'at', 'dawn,', 'still', 'warm', 'when', 'you', 'arrive.'];
 // const FLOUR = Array.from({ length: 28 }, (_, i) => ({
@@ -258,8 +261,20 @@ function Home() {
             ))} */}
           </div>
 
-          <video className="bk-video" autoPlay muted loop playsInline aria-hidden="true">
-            <source src="/backgroundloop.mp4" type="video/mp4" />
+          {/* 1080p for big screens, 720p for phones; WebM first (smaller), MP4 for older browsers.
+              The poster (first frame) shows instantly while the video loads. */}
+          <video
+            className="bk-video"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            poster="/backgroundloop-poster.webp"
+            aria-hidden="true"
+          >
+            <source src={`/backgroundloop${SMALL_SCREEN ? '-720' : ''}.webm`} type="video/webm" />
+            <source src={`/backgroundloop${SMALL_SCREEN ? '-720' : ''}.mp4`} type="video/mp4" />
           </video>
 
           <div className="bk-hero-stage">
@@ -317,4 +332,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default Home;
