@@ -234,6 +234,22 @@ function Ticker({ value }) {
   return <>{fmt(shown)}</>;
 }
 
+/* Small categories share a section on the full menu (display only - the data keeps its own category) */
+const SECTION_OF = {
+  Cookies: 'Sweets',
+  Muffins: 'Sweets',
+  Individuals: 'Sweets',
+  'English Cake': 'Sweets',
+  Tarts: 'Sweets',
+  Choux: 'Sweets',
+  Salad: 'Salads & Sandwiches',
+  Sandwiches: 'Salads & Sandwiches',
+  'V60 Coffee': 'Hot Drinks',
+  Smoothies: 'Cold Drinks',
+  Beverages: 'Cold Drinks',
+  'New Drinks': 'Cold Drinks',
+};
+
 /* ---------- image with an emoji fallback ---------- */
 function Photo({ src, alt, emoji, className }) {
   const [bad, setBad] = useState(false);
@@ -320,7 +336,7 @@ export default function BasketMenu() {
       .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then(list => {
         if (!alive || !Array.isArray(list) || list.length === 0) return;
-        setMenu(list.map(fromApi));
+        setMenu(list.map(fromApi).filter(p => !p.hidden));
       })
       .catch(() => {
         /* offline: bundled menu stays */
@@ -353,6 +369,18 @@ export default function BasketMenu() {
         (!q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q))
     );
   }, [menu, category, query]);
+
+  // Menu laid out in category sections (one section when a category or search is active)
+  const sections = useMemo(() => {
+    if (query.trim()) return [{ title: `results for “${query.trim()}”`, items: filtered }];
+    const groups = new Map();
+    filtered.forEach(p => {
+      const title = category === 'All' ? SECTION_OF[p.category] || p.category : p.category;
+      if (!groups.has(title)) groups.set(title, []);
+      groups.get(title).push(p);
+    });
+    return [...groups].map(([title, items]) => ({ title, items }));
+  }, [filtered, query, category]);
 
   /* ---------- cart ---------- */
   const addToCart = useCallback((product, qty = 1) => {
@@ -708,6 +736,45 @@ export default function BasketMenu() {
   const shown = cart.slice(-SLOTS.length);
   const hidden = cart.length - shown.length;
 
+  const renderCard = (p, i) => (
+    <article
+      key={p.id}
+      className={`bk-card bm-card ${dragId === p.id ? 'is-dragging' : ''} ${p.available ? '' : 'is-soldout'}`}
+      style={{ '--i': Math.min(i, 8) }}
+      tabIndex={0}
+      aria-label={`${p.name}, ${p.price} EGP. Press Enter to add to the basket.`}
+      onPointerDown={e => startPress(e, p)}
+      onPointerMove={tilt}
+      onPointerLeave={untilt}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          quickAdd(p, e.currentTarget.querySelector('.bk-img'));
+        }
+      }}
+    >
+      <div className="bk-img">
+        <Photo src={p.image} alt={p.name} emoji={CATEGORY_ICONS[p.category]} />
+        {!p.available ? <span className="bm-ribbon bm-soldout">Sold out</span> : p.featured && <span className="bm-ribbon">signature</span>}
+      </div>
+      <div className="bk-info">
+        <h3>{p.name.toLowerCase()}</h3>
+        <p className="bm-desc">{p.description}</p>
+        <p className="bk-price">{fmt(p.price)} egp</p>
+      </div>
+      <button
+        className="bk-add"
+        type="button"
+        aria-label={`Add ${p.name} to basket`}
+        disabled={!p.available}
+        onPointerDown={e => e.stopPropagation()}
+        onClick={e => quickAdd(p, e.currentTarget.closest('.bm-card').querySelector('.bk-img'))}
+      >
+        +
+      </button>
+    </article>
+  );
+
   return (
     <div className="bm" id="menu">
       <section className="bk-menu bm-menu" aria-label="Menu">
@@ -892,45 +959,12 @@ export default function BasketMenu() {
                 <p>Try another word or pick a different category.</p>
               </div>
             ) : (
-              <div className="bk-grid bm-grid" key={`${category}|${query}`}>
-                {filtered.map((p, i) => (
-                  <article
-                    key={p.id}
-                    className={`bk-card bm-card ${dragId === p.id ? 'is-dragging' : ''} ${p.available ? '' : 'is-soldout'}`}
-                    style={{ '--i': Math.min(i, 12) }}
-                    tabIndex={0}
-                    aria-label={`${p.name}, ${p.price} EGP. Press Enter to add to the basket.`}
-                    onPointerDown={e => startPress(e, p)}
-                    onPointerMove={tilt}
-                    onPointerLeave={untilt}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        quickAdd(p, e.currentTarget.querySelector('.bk-img'));
-                      }
-                    }}
-                  >
-                    <div className="bk-img">
-                      <Photo src={p.image} alt={p.name} emoji={CATEGORY_ICONS[p.category]} />
-                      {!p.available ? <span className="bm-ribbon bm-soldout">Sold out</span> : p.featured && <span className="bm-ribbon">Signature</span>}
-                    </div>
-                    <div className="bk-info">
-                      <p className="bk-cat">{p.category}</p>
-                      <h3>{p.name}</h3>
-                      <p className="bm-desc">{p.description}</p>
-                      <p className="bk-price">{fmt(p.price)} EGP</p>
-                    </div>
-                    <button
-                      className="bk-add"
-                      type="button"
-                      aria-label={`Add ${p.name} to basket`}
-                      disabled={!p.available}
-                      onPointerDown={e => e.stopPropagation()}
-                      onClick={e => quickAdd(p, e.currentTarget.closest('.bm-card').querySelector('.bk-img'))}
-                    >
-                      +
-                    </button>
-                  </article>
+              <div className="bm-sections" key={`${category}|${query}`}>
+                {sections.map(sec => (
+                  <section key={sec.title} className="bm-sec" aria-label={sec.title}>
+                    <h3 className="bm-sec-title">{sec.title.toLowerCase()}</h3>
+                    <div className="bk-grid bm-grid">{sec.items.map(renderCard)}</div>
+                  </section>
                 ))}
               </div>
             )}

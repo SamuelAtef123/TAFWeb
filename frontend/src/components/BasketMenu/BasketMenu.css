@@ -658,22 +658,56 @@ body.bm-grabbing {
   background: rgba(255, 255, 255, 0.16);
 }
 
-/* ---------- the menu cards: a bakery window ----------
-   Each treat sits in an arched shop window (like the old Paris boulangerie fronts),
-   with its name in Garamond italic and the price written underneath, menu-board style.
-   No box around the card: the page is the shelf. */
+/* ---------- the menu: category sections of top-view photos ----------
+   Every photo is the same top-down shot on a transparent background with one soft
+   shadow, so the treats float straight on the page. Section title on the left,
+   lowercase names, a short grey description and an italic price. */
+.bm-sections {
+  container-type: inline-size;
+}
+.bm-sec {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px 30px;
+  padding: 34px 0 46px;
+  border-top: 1px solid rgba(122, 90, 68, 0.16);
+}
+.bm-sec:first-child {
+  border-top: 0;
+  padding-top: 10px;
+}
+.bm-sec-title {
+  align-self: start;
+  margin: 0;
+  color: #9b7b62;
+  font: 400 clamp(30px, 3.6vw, 44px) / 1.05 var(--f-display);
+  font-size-adjust: none;
+  letter-spacing: -0.01em;
+}
+/* lots of room: the title moves into its own column on the left, like a menu card */
+@container (min-width: 1000px) {
+  .bm-sec {
+    grid-template-columns: 200px 1fr;
+  }
+}
+@container (max-width: 640px) {
+  .bm-sec {
+    padding: 26px 0 34px;
+  }
+}
 .bm-grid.bk-grid {
-  grid-template-columns: repeat(auto-fill, minmax(214px, 1fr));
-  gap: 52px 30px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 36px 30px;
 }
 .bm-card.bk-card {
   display: flex;
   flex-direction: column;
+  container-type: inline-size;
   border: 0;
   border-radius: 0;
   background: none;
   overflow: visible;
-  text-align: center;
+  text-align: left;
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
@@ -683,41 +717,39 @@ body.bm-grabbing {
   transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   transition: transform 0.2s ease-out, opacity 0.2s;
   animation: bm-card-in 0.5s cubic-bezier(0.25, 0.9, 0.35, 1) both;
-  animation-delay: calc(var(--i, 0) * 30ms);
+  animation-delay: calc(var(--i, 0) * 40ms);
 }
 .bm-card.bk-card:hover {
   transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   box-shadow: none;
 }
 .bm-card:focus-visible .bk-img {
-  outline: 3px solid var(--gold);
-  outline-offset: 4px;
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 12px;
 }
 .bm-card.is-dragging {
   opacity: 0.4;
   transform: scale(0.96);
 }
 @keyframes bm-card-in {
-  0% { opacity: 0; transform: translateY(22px) scale(0.95); }
+  0% { opacity: 0; transform: translateY(18px); }
   100% { opacity: 1; }
 }
-/* the arched window */
+/* the photo: square, no frame - the cutout floats on the page */
 .bm-card .bk-img {
-  --arch: 999px;
   position: relative;
-  height: 262px;
-  border-radius: var(--arch) var(--arch) 14px 14px;
-  background: var(--latte);
-  box-shadow: 0 22px 30px -22px rgba(59, 35, 20, 0.55);
+  height: auto;
+  aspect-ratio: 1;
+  background: none;
+  overflow: visible;
 }
-.bm-card .bk-img::after {
-  /* the window frame: a thin cream line just inside the edge */
-  content: '';
-  position: absolute;
-  inset: 7px;
-  border: 1px solid rgba(255, 246, 228, 0.75);
-  border-radius: var(--arch) var(--arch) 9px 9px;
-  pointer-events: none;
+.bm-card .bk-img img {
+  object-fit: contain;
+  transition: transform 0.5s cubic-bezier(0.25, 0.9, 0.35, 1);
+}
+.bm-card.bk-card:hover .bk-img img {
+  transform: scale(1.05) rotate(-2deg);
 }
 .bm-card .bk-img img,
 .bm-card .bk-img .bm-fallback {
@@ -727,74 +759,76 @@ body.bm-grabbing {
   display: flex;
   flex: 1;
   flex-direction: column;
-  align-items: center;
-  padding: 22px 10px 0;
-}
-.bm-card .bk-cat {
-  margin: 0 0 4px;
-  color: var(--crust);
-  font: italic 400 15px var(--f-text);
+  align-items: flex-start;
+  padding: 10px 6% 0;
 }
 .bm-card .bk-info h3 {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   color: var(--espresso);
-  font: italic 500 25px/1.15 var(--f-text);
+  font: 600 21px/1.2 var(--f-text);
   font-size-adjust: none;
   text-wrap: balance;
 }
 .bm-desc {
   display: -webkit-box;
   max-width: 30ch;
-  margin: 0 auto 14px;
+  margin: 0 0 10px;
   overflow: hidden;
-  color: #7a5a44;
-  font-size: 15px;
-  line-height: 1.5;
-  -webkit-line-clamp: 2;
+  color: #8c7a6c;
+  text-transform: lowercase;
+  font-size: 15.5px;
+  line-height: 1.45;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
-/* price, written like a menu board: a short rule either side */
 .bm-card .bk-price {
   position: static;
-  margin-top: auto; /* prices line up along the row */
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
+  margin-top: auto;
   color: var(--crust);
-  font: 600 20px var(--f-text);
+  font: italic 400 18px var(--f-text);
   font-variant-numeric: oldstyle-nums;
 }
-.bm-card .bk-price::before,
-.bm-card .bk-price::after {
-  content: '';
-  width: 22px;
-  height: 1px;
-  background: currentColor;
-  opacity: 0.45;
-}
-/* the + sits on the window's bottom-right corner */
+/* the + sits on the photo's bottom-right corner */
 .bm-card .bk-add {
-  top: 236px;
-  right: 12px;
+  top: calc(100cqw - 54px);
+  right: 4px;
   bottom: auto;
-  width: 46px;
-  height: 46px;
-  font: 400 26px/1 var(--f-text);
+  width: 44px;
+  height: 44px;
+  font: 400 25px/1 var(--f-text);
   font-size-adjust: none;
-  box-shadow: 0 6px 14px rgba(36, 20, 12, 0.3);
+  box-shadow: 0 6px 14px rgba(36, 20, 12, 0.25);
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.2s, transform 0.2s, background 0.25s;
+}
+.bm-card:hover .bk-add,
+.bm-card:focus-within .bk-add,
+.bm-card .bk-add.pop {
+  opacity: 1;
+  transform: none;
+}
+@media (hover: none) {
+  .bm-card .bk-add {
+    opacity: 1;
+    transform: none;
+  }
 }
 .bm-card .bk-img .bm-ribbon {
   position: absolute;
-  left: 50%;
-  top: 22px;
-  transform: translateX(-50%);
-  padding: 3px 14px 4px;
-  border-radius: 999px;
-  background: rgba(255, 249, 236, 0.94);
+  left: 6%;
+  top: 2%;
+  padding: 0;
+  background: none;
   color: var(--crust);
-  font: italic 500 15px/1.2 var(--f-text);
-  box-shadow: 0 3px 10px rgba(36, 20, 12, 0.18);
+  font: italic 400 15px/1.2 var(--f-text);
+  letter-spacing: 0.02em;
   white-space: nowrap;
+}
+.bm-card .bk-img .bm-ribbon:not(.bm-soldout)::before {
+  content: '✦ ';
+  font-style: normal;
+  font-size: 11px;
 }
 
 /* ---------- drawer ---------- */
@@ -1031,6 +1065,8 @@ body.bm-grabbing {
   pointer-events: none;
 }
 .bm-card .bk-img .bm-ribbon.bm-soldout {
+  padding: 2px 10px;
+  border-radius: 999px;
   background: var(--roast);
   color: var(--butter);
 }
@@ -1119,43 +1155,32 @@ body.bm-grabbing {
     padding: 0 14px;
     font-size: 13px;
   }
-  /* phones: two windows per row */
+  /* phones: two treats per row */
   .bm-grid.bk-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 40px 14px;
-  }
-  .bm-card .bk-img {
-    height: 196px;
+    gap: 30px 14px;
   }
   .bm-card .bk-add {
-    top: 166px;
-    right: 4px;
-    width: 40px;
-    height: 40px;
-    font-size: 22px;
+    top: calc(100cqw - 44px);
+    right: 0;
+    width: 38px;
+    height: 38px;
+    font-size: 21px;
   }
   .bm-card .bk-info {
-    padding: 16px 2px 0;
-  }
-  .bm-card .bk-cat {
-    font-size: 13px;
+    padding: 6px 2px 0;
   }
   .bm-card .bk-info h3 {
-    font-size: 20px;
+    font-size: 18px;
   }
   .bm-desc {
     font-size: 14px;
+    -webkit-line-clamp: 2;
   }
   .bm-card .bk-price {
-    gap: 8px;
-    font-size: 18px;
-  }
-  .bm-card .bk-price::before,
-  .bm-card .bk-price::after {
-    width: 12px;
+    font-size: 16px;
   }
   .bm-card .bk-img .bm-ribbon {
-    top: 14px;
     font-size: 13px;
   }
 }

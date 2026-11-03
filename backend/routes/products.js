@@ -13,7 +13,8 @@ const ALLOWED_FIELDS = [
   'description',
   'image',
   'featured',
-  'available'
+  'available',
+  'hidden'
 ];
 const pickAllowed = body => {
   const out = {};
@@ -30,9 +31,13 @@ const validateId = (req, res, next) => {
   next();
 };
 
-router.get('/', async (req, res) => {
+// Public menu: hidden products are left out. Admins can ask for everything with ?all=1
+const adminIfAll = (req, res, next) => (req.query.all === '1' ? authAdmin(req, res, next) : next());
+
+router.get('/', adminIfAll, async (req, res) => {
   try {
-    const products = await Product.find();
+    const filter = req.query.all === '1' ? {} : { hidden: { $ne: true } };
+    const products = await Product.find(filter);
     res.json(products);
   } catch (error) {
     res.status(503).json({ message: 'Product service is unavailable' });
