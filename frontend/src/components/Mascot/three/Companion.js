@@ -1,17 +1,14 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
-import { rigTino } from './tinoRig';
 
 /*
   3D Tino: the logo boy as a real 3D model (public/mascot/tino3d.glb, ~200 KB),
   drawn on a transparent full-screen WebGL layer where 1 unit = 1 CSS pixel,
   so he can run to anything on the page (a menu card, the basket, the marquee...).
 
-  The generated model has no skeleton, so tinoRig.js cuts it into head, arms (each still
-  holding its bread) and legs and gives it bones: he swings his arms when he walks, waves,
-  cheers, gestures while he talks, climbs up and down the marquee hand over hand and carries
-  orders over his head, on top of the whole-body hops, flips, cartwheels and spins.
+  He is one solid figure, so all his moves are whole-body: hops, waddles, flips,
+  cartwheels, spins, surfing and balancing an order on his head.
 
   Every move is an async step. Starting a new sequence cancels the running one,
   so scrolling in the middle of a backflip never leaves him stuck in the air.
@@ -63,15 +60,13 @@ function loadModel() {
         const b2 = new THREE.Box3().setFromObject(m);
         const c = b2.getCenter(new THREE.Vector3());
         m.position.sub(c); // centred on the body (the flip pivot)
-        m.updateMatrixWorld(true);
         m.traverse(o => {
           if (o.isMesh) {
-            // both sides: where an arm is cut from the body you see its inside, not a hole
-            o.material.side = THREE.DoubleSide;
+            o.material.side = THREE.FrontSide;
             if (o.material.map) o.material.map.anisotropy = 4;
           }
         });
-        return rigTino(m);
+        return m;
       });
   }
   return modelPromise;
@@ -79,11 +74,11 @@ function loadModel() {
 
 export default class Companion {
   static async create(opts) {
-    const rig = await loadModel();
-    return new Companion(rig, opts);
+    const model = await loadModel();
+    return new Companion(model, opts);
   }
 
-  constructor({ group: model, bones }, { onPoke, label = 'Tino, the bakery mascot. Click to talk.', reduced = false } = {}) {
+  constructor(model, { onPoke, label = 'Tino, the bakery mascot. Click to talk.', reduced = false } = {}) {
     this.reduced = reduced;
     this.onPoke = onPoke;
     this.alive = true;
@@ -116,7 +111,6 @@ export default class Companion {
     this.spin = new THREE.Group();
     this.spin.position.y = 50;
     this.spin.add(model);
-    this.bones = bones;
     this.tilt.add(this.spin);
     this.root.add(this.tilt);
     this.root.visible = false;
@@ -243,8 +237,6 @@ export default class Companion {
     if (this.act) this.act.resolve('cut');
     this.act = null;
     this.extraYaw = 0;
-    this.faceAway = false;
-    this.clip = this.carrying ? 'carry' : 'idle';
     const id = this.runId;
     return async p => {
       if (id !== this.runId || !this.alive) throw CANCELLED;
@@ -337,14 +329,12 @@ export default class Companion {
     if (!url) {
       this.carry.visible = false;
       this.carrying = false;
-      if (this.clip === 'carry') this.clip = 'idle';
       return;
     }
     this.photo.material.map = this.texture(url);
     this.photo.material.needsUpdate = true;
     this.carry.visible = true;
     this.carrying = true;
-    this.clip = 'carry';
   }
 
   /* =================== the frame loop =================== */
@@ -380,21 +370,14 @@ export default class Companion {
         if (f.h) this.h = lerp(this.h, f.h, s);
       }
     }
-    let look = 0;
     if (!moving && !this.act) {
-      // look towards the cursor: a little with the body, more with the head
+      // look towards the cursor
       const p = this.pointer;
-      look = p ? clamp((p.x - this.pos.x) / window.innerWidth, -0.5, 0.5) : 0;
-      this.yawTarget = look * 0.7;
+      this.yawTarget = p ? clamp((p.x - this.pos.x) / window.innerWidth, -0.5, 0.5) * 1.2 : 0;
     }
-    if (this.faceAway) this.yawTarget = Math.PI; // climbing: back to us, face to the marquee
 
     // pose: reset, add the looping motion, then the one-shot move on top
-    // (whole body: tilt/spin/squash; joints: P.b.<bone> = [x, y, z] rotations)
-    const P = {
-      tx: 0, tz: 0, sx: 0, sy: 0, sz: 0, dy: 0, sqx: 1, sqy: 1, yaw: 0,
-      b: { head: [0, look * 0.9, 0], armR: [0, 0, 0], armB: [0, 0, 0], legR: [0, 0, 0], legB: [0, 0, 0] },
-    };
+    const P = { tx: 0, tz: 0, sx: 0, sy: 0, sz: 0, dy: 0, sqx: 1, sqy: 1, yaw: 0 };
     this.applyClip(tweenClip || (moving ? (this.carrying ? 'carryRun' : 'run') : this.clip), t, P);
     if (this.act) {
       const a = this.act;
@@ -403,18 +386,10 @@ export default class Companion {
       if (k >= 1) a.resolve('done');
     }
     if (this.talking) {
-      // nod and talk with his hands
-      P.b.head[0] += Math.sin(t * 9) * 0.07;
-      P.b.head[2] += Math.sin(t * 3.1) * 0.05;
-      if (!this.act && !this.carrying && this.clip === 'idle' && !moving) {
-        P.b.armB[2] += 0.35 + Math.abs(Math.sin(t * 3.4)) * 0.5;
-        P.b.armB[0] += -0.35 - Math.sin(t * 2.3) * 0.15;
-        P.b.armR[2] -= 0.15 + Math.abs(Math.sin(t * 2.7 + 1)) * 0.25;
-      }
-      P.sqy *= 1 + Math.abs(Math.sin(t * 11)) * 0.012;
+      P.sqy *= 1 + Math.abs(Math.sin(t * 11)) * 0.025;
+      P.tx += Math.sin(t * 9) * 0.025;
     }
     P.sz += flipZ;
-    Object.entries(P.b).forEach(([k, v]) => this.bones[k].rotation.set(v[0], v[1], v[2]));
 
     // place him on screen
     this.yaw = lerp(this.yaw, this.yawTarget, 1 - Math.pow(0.002, dt));
@@ -434,8 +409,8 @@ export default class Companion {
     // the order balancing on his head
     if (this.carry.visible && this.carrying) {
       const bob = Math.sin(t * 13) * 2;
-      this.carry.position.set(this.pos.x + Math.sin(t * 6.5) * 2, -(this.pos.y - this.h * 1.04 - P.dy) + bob, 400);
-      this.carry.scale.setScalar(s * 1.5); // a tray, held up with both hands
+      this.carry.position.set(this.pos.x + Math.sin(t * 6.5) * 2, -(this.pos.y - this.h * 1.06 - P.dy) + bob, 400);
+      this.carry.scale.setScalar(s * 1.05);
       this.carry.rotation.z = P.tz * 0.6 + Math.sin(t * 6.5) * 0.06;
     }
 
@@ -460,86 +435,33 @@ export default class Companion {
   }
 
   /* =================== body motion =================== */
-  // Joint conventions (he faces the camera): armR = his loaf arm (screen left), armB = his baguette arm.
-  // Raising an arm out to the side: armR z < 0, armB z > 0. Swinging forward/back: x.
   applyClip(name, t, P) {
     const h = this.h;
-    const b = P.b;
     switch (name) {
-      case 'idle': {
-        P.sqy *= 1 + Math.sin(t * 2.2) * 0.012;
-        P.tz += Math.sin(t * 1.1) * 0.025;
-        // hands never quite still: a slow swing, and now and then a little fidget
-        b.armR[0] += Math.sin(t * 1.7) * 0.12;
-        b.armB[0] += -Math.sin(t * 1.7) * 0.12;
-        b.armR[2] -= 0.06 + Math.max(0, Math.sin(t * 0.9)) * 0.12;
-        b.armB[2] += 0.06 + Math.max(0, Math.sin(t * 0.9 + 2)) * 0.12;
-        b.head[2] += Math.sin(t * 0.8) * 0.06;
-        break;
-      }
+      case 'idle':
       case 'carry':
         P.sqy *= 1 + Math.sin(t * 2.2) * 0.012;
-        b.armR[2] = -2.55 + Math.sin(t * 6.5) * 0.05;
-        b.armB[2] = 2.55 + Math.sin(t * 6.5) * 0.05;
+        P.tz += Math.sin(t * 1.1) * 0.025;
         break;
       case 'run':
       case 'carryRun': {
-        // a happy little run: arms and legs swinging
+        // a happy waddle
         const f = t * 15;
-        const sw = Math.sin(f);
-        P.tz += sw * (name === 'run' ? 0.08 : 0.05);
-        P.dy += Math.abs(Math.cos(f)) * h * 0.05;
-        P.tx += 0.1;
-        b.legR[0] = sw * 0.38;
-        b.legB[0] = -sw * 0.38;
-        if (name === 'run') {
-          b.armR[0] = -sw * 0.7;
-          b.armB[0] = sw * 0.7;
-          b.armR[2] = -0.15;
-          b.armB[2] = 0.15;
-        } else {
-          b.armR[2] = -2.55 + sw * 0.06;
-          b.armB[2] = 2.55 + sw * 0.06;
-        }
-        break;
-      }
-      case 'climb': {
-        // hand over hand, legs pushing, seen from behind
-        const f = t * 7;
-        const sw = Math.sin(f);
-        b.armR[2] = -(1.55 + Math.max(0, sw) * 0.85);
-        b.armB[2] = 1.55 + Math.max(0, -sw) * 0.85;
-        b.armR[0] = -0.25;
-        b.armB[0] = -0.25;
-        b.legR[0] = Math.max(0, -sw) * 0.4;
-        b.legB[0] = Math.max(0, sw) * 0.4;
-        P.tz += sw * 0.06;
-        P.dy += Math.abs(sw) * h * 0.02;
-        break;
-      }
-      case 'hang': {
-        // dangling from the edge by both hands, legs kicking
-        b.armR[2] = -2.6;
-        b.armB[2] = 2.6;
-        b.legR[0] = Math.sin(t * 9) * 0.35;
-        b.legB[0] = -Math.sin(t * 9) * 0.35;
+        P.tz += Math.sin(f) * (name === 'run' ? 0.16 : 0.08);
+        P.dy += Math.abs(Math.sin(f)) * h * 0.06;
+        P.tx += 0.12;
         break;
       }
       case 'surf':
         P.yaw += -0.95;
         P.sqy *= 0.92;
+        P.sqx *= 1.04;
         P.tz += Math.sin(t * 5) * 0.12;
-        b.armR[2] = -1.3 + Math.sin(t * 7) * 0.25;
-        b.armB[2] = 1.3 + Math.sin(t * 7 + 1) * 0.25;
+        P.tx += 0.1;
         break;
       case 'fly':
-        // arms flapping, legs tucked: "wheee!"
-        P.sqy *= 1.05;
-        P.sqx *= 0.97;
-        b.armR[2] = -(1.9 + Math.sin(t * 16) * 0.45);
-        b.armB[2] = 1.9 + Math.sin(t * 16) * 0.45;
-        b.legR[0] = -0.3;
-        b.legB[0] = 0.25;
+        P.sqy *= 1.07;
+        P.sqx *= 0.95;
         break;
       default:
         break;
@@ -548,163 +470,98 @@ export default class Companion {
 
   applyAct(name, k, t, P) {
     const h = this.h;
-    const b = P.b;
     const bump = Math.sin(Math.PI * k); // 0 -> 1 -> 0
-    const up = E.out(Math.min(1, k * 4)) * (1 - E.in(Math.max(0, (k - 0.82) / 0.18))); // raise, hold, lower
     switch (name) {
       case 'peek':
-        // leaning out from behind the 2.5D Tino, waving
-        P.tz += -0.42 * E.out(Math.min(1, k * 3)) + Math.sin(t * 10) * 0.04 * (k > 0.3 ? 1 : 0);
+        // leaning out from behind the 2.5D Tino, wiggling hello
+        P.tz += -0.42 * E.out(Math.min(1, k * 3)) + Math.sin(t * 10) * 0.05 * (k > 0.3 ? 1 : 0);
         P.yaw += 0.35;
-        b.armB[2] = up * (2.1 + Math.sin(t * 13) * 0.4);
-        b.head[2] += 0.2 * up;
         break;
       case 'wave':
-        b.armB[2] = up * (2.15 + Math.sin(k * TAU * 3.5) * 0.45);
-        b.armB[0] = -0.2 * up;
-        b.head[2] += -0.15 * up;
-        P.tz += Math.sin(k * TAU * 1.75) * 0.05 * up;
-        P.dy += Math.abs(Math.sin(k * TAU * 1.75)) * h * 0.03;
-        break;
       case 'wiggle':
         P.tz += Math.sin(k * TAU * 3) * 0.18 * bump;
         P.dy += Math.abs(Math.sin(k * TAU * 1.5)) * h * 0.06;
         P.yaw += Math.sin(k * TAU * 1.5) * 0.3;
-        b.armR[2] = -(0.6 + Math.sin(k * TAU * 3) * 0.5) * bump;
-        b.armB[2] = (0.6 - Math.sin(k * TAU * 3) * 0.5) * bump;
         break;
       case 'hop':
         P.dy += bump * h * 0.22;
         P.sqy *= k < 0.15 ? 0.9 : 1 + bump * 0.06;
-        b.armR[2] = -1.4 * bump;
-        b.armB[2] = 1.4 * bump;
-        b.legR[0] = -0.25 * bump;
-        b.legB[0] = 0.2 * bump;
         break;
-      case 'backflip':
-      case 'frontflip': {
-        const back = name === 'backflip';
+      case 'backflip': {
         const e = E.inOut(clamp((k - 0.12) / 0.76, 0, 1));
-        P.dy += Math.sin(Math.PI * clamp((k - 0.1) / 0.8, 0, 1)) * h * (back ? 0.6 : 0.55);
-        P.sx += (back ? -TAU : TAU) * e;
-        P.yaw += (back ? 0.5 : -0.5) * bump;
+        P.dy += Math.sin(Math.PI * clamp((k - 0.1) / 0.8, 0, 1)) * h * 0.6;
+        P.sx += -TAU * e;
+        P.yaw += 0.5 * bump;
         const tuck = Math.sin(Math.PI * e);
-        P.sqy *= 1 - 0.14 * tuck;
+        P.sqy *= 1 - 0.18 * tuck;
         if (k < 0.12) P.sqy *= 1 - 0.15 * Math.sin((k / 0.12) * Math.PI);
-        // arms swing up for the take-off, hug the knees in the air
-        const swing = k < 0.15 ? k / 0.15 : 1 - tuck;
-        b.armR[2] = -2.3 * swing - 0.5 * tuck;
-        b.armB[2] = 2.3 * swing + 0.5 * tuck;
-        b.armR[0] = -0.9 * tuck;
-        b.armB[0] = -0.9 * tuck;
-        b.legR[0] = -0.35 * tuck;
-        b.legB[0] = -0.35 * tuck;
+        break;
+      }
+      case 'frontflip': {
+        const e = E.inOut(clamp((k - 0.1) / 0.8, 0, 1));
+        P.dy += Math.sin(Math.PI * clamp((k - 0.08) / 0.84, 0, 1)) * h * 0.55;
+        P.sx += TAU * e;
+        P.yaw += -0.5 * bump;
+        P.sqy *= 1 - 0.18 * Math.sin(Math.PI * e);
         break;
       }
       case 'cartwheel':
         P.sz += -TAU * E.inOut(k);
         P.dy += bump * h * 0.32;
-        b.armR[2] = -2.35;
-        b.armB[2] = 2.35;
-        b.legR[2] = -0.3;
-        b.legB[2] = 0.3;
         break;
       case 'spin':
         P.yaw += TAU * 2 * E.inOut(k);
         P.dy += bump * h * 0.2;
         P.sqy *= 1 + bump * 0.06;
-        b.armR[2] = -1.5 * up;
-        b.armB[2] = 1.5 * up;
-        b.legB[0] = -0.3 * bump;
+        P.sqx *= 1 - bump * 0.04;
         break;
       case 'dance': {
         const f = k * TAU * 4;
-        P.tz += Math.sin(f) * 0.15;
-        P.yaw += Math.sin(f * 0.5) * 0.5;
-        P.dy += Math.abs(Math.sin(f)) * h * 0.06;
-        // disco: one arm up, one arm down, swap
-        b.armR[2] = -(1.1 + Math.sin(f) * 0.9) * up;
-        b.armB[2] = (1.1 - Math.sin(f) * 0.9) * up;
-        b.armR[0] = -0.3 * up;
-        b.legR[2] = -Math.max(0, Math.sin(f)) * 0.3;
-        b.legB[2] = Math.max(0, -Math.sin(f)) * 0.3;
-        b.head[2] += Math.sin(f) * 0.15;
+        P.tz += Math.sin(f) * 0.2;
+        P.yaw += Math.sin(f * 0.5) * 0.6;
+        P.dy += Math.abs(Math.sin(f)) * h * 0.07;
+        P.sqy *= 1 + Math.cos(f * 2) * 0.03;
         break;
       }
       case 'cheer': {
         const j = Math.abs(Math.sin(k * TAU));
         P.dy += j * h * 0.28;
         P.sqy *= 1 + j * 0.08;
-        P.tz += Math.sin(k * TAU * 2) * 0.06;
-        b.armR[2] = -(2.2 + Math.sin(k * TAU * 4) * 0.3) * up;
-        b.armB[2] = (2.2 - Math.sin(k * TAU * 4) * 0.3) * up;
-        b.legR[0] = -0.2 * j;
-        b.legB[0] = -0.2 * j;
+        P.sqx *= 1 - j * 0.05;
+        P.tz += Math.sin(k * TAU * 2) * 0.1;
         break;
       }
       case 'tada': {
         const e = E.back(Math.min(1, k * 2.2));
         P.dy += Math.sin(Math.PI * Math.min(1, k * 2)) * h * 0.12;
-        P.tz += 0.1 * e * (1 - k);
-        b.armR[2] = -1.35 * e * (1 - E.in(Math.max(0, (k - 0.75) / 0.25)));
-        b.armB[2] = 1.35 * e * (1 - E.in(Math.max(0, (k - 0.75) / 0.25)));
-        b.legB[2] = 0.25 * e * (1 - k);
-        b.head[2] += 0.15 * e * (1 - k);
+        P.tz += 0.16 * e * (1 - k);
+        P.sqy *= 1 + 0.06 * e * (1 - k);
         break;
       }
       case 'bow':
-        P.tx += 0.5 * bump;
-        b.armR[0] = -0.9 * bump; // hand to his chest
-        b.armB[0] = 0.5 * bump;
-        b.head[0] += 0.25 * bump;
+        P.tx += 0.55 * bump;
         break;
       case 'sniff':
-        P.tx += 0.12 * bump;
-        P.yaw += Math.sin(k * TAU) * 0.5;
-        b.head[0] += -0.3 * bump + Math.sin(k * TAU * 6) * 0.05;
-        b.armB[0] = -0.6 * bump;
+        P.tx += 0.18 * bump;
+        P.yaw += Math.sin(k * TAU) * 0.6;
+        P.dy += Math.abs(Math.sin(k * TAU * 4)) * h * 0.015;
         break;
       case 'grab':
-        P.tx += 0.4 * bump;
-        P.sqy *= 1 - 0.12 * bump;
-        b.armR[0] = -1.2 * bump;
-        b.armB[0] = -1.2 * bump;
+        P.tx += 0.45 * bump;
+        P.sqy *= 1 - 0.14 * bump;
         break;
       case 'toss':
-        P.tx += -0.25 * bump;
+        P.tx += -0.3 * bump;
         P.dy += bump * h * 0.12;
-        b.armR[2] = -2.55 - 0.2 * bump;
-        b.armB[2] = 2.55 + 0.2 * bump;
-        b.armR[0] = 0.5 * bump;
-        b.armB[0] = 0.5 * bump;
+        P.sqy *= 1 + 0.06 * bump;
         break;
       case 'land':
         P.sqy *= 1 - 0.16 * bump;
         P.sqx *= 1 + 0.1 * bump;
-        b.armR[2] = -0.9 * bump;
-        b.armB[2] = 0.9 * bump;
         break;
       case 'dizzy':
-        P.tz += Math.sin(k * TAU * 3) * 0.2 * (1 - k * 0.5);
+        P.tz += Math.sin(k * TAU * 3) * 0.22 * (1 - k * 0.5);
         P.yaw += Math.sin(k * TAU * 2) * 0.4;
-        b.armR[2] = -(0.7 + Math.sin(k * TAU * 3) * 0.5);
-        b.armB[2] = 0.7 - Math.sin(k * TAU * 3 + 1) * 0.5;
-        b.head[2] += Math.sin(k * TAU * 3) * 0.25;
-        break;
-      case 'swing': {
-        // hanging from the marquee, swinging to get some momentum
-        const sw = Math.sin(k * TAU * 2) * (1 - k * 0.3);
-        P.tz += sw * 0.28;
-        b.legR[0] = -0.4 * sw;
-        b.legB[0] = -0.4 * sw;
-        break;
-      }
-      case 'pullup':
-        // pulling himself up over the edge
-        P.sqy *= 1 - 0.1 * bump;
-        b.armR[2] = -2.6 + 1.1 * E.inOut(k);
-        b.armB[2] = 2.6 - 1.1 * E.inOut(k);
-        b.legR[0] = -0.5 * bump;
         break;
       default:
         break;
@@ -734,19 +591,6 @@ export default class Companion {
     const r = m.getBoundingClientRect();
     const tilt = Math.tan((1 * Math.PI) / 180); // the marquee is rotated -1deg (right end higher)
     return clamp(r.top + (r.right - x) * tilt + 6, 70, window.innerHeight - 30);
-  }
-
-  // the marquee's top and bottom edge at x (it is rotated -1deg), and whether it is on screen
-  marqueeEdges(x) {
-    const m = document.querySelector('.bk-marquee');
-    if (!m) return null;
-    const r = m.getBoundingClientRect();
-    const tilt = Math.tan((1 * Math.PI) / 180);
-    return {
-      top: r.top + (r.right - x) * tilt,
-      bottom: r.bottom - (x - r.left) * tilt,
-      visible: r.bottom > 90 && r.top < window.innerHeight - 60,
-    };
   }
 
   /* =================== scenes =================== */
@@ -827,46 +671,20 @@ export default class Companion {
     if (['backflip', 'frontflip'].includes(name)) await step(this.play('land', 220));
   }
 
-  // back up to the 2.5D Tino: if the marquee is on screen he climbs up it on the way
+  // stand next to the 2.5D Tino (coming back up to the hero)
   async toHero(getRect) {
     const step = this.newRun();
-    const fromDock = this.where === 'dock';
     this.where = 'travel';
-    this.follow = null;
     this.occluderRect = null;
     this.show(true);
     const spot = () => this.besideSpot(getRect) || this.dockSpot();
-    const m0 = this.marqueeEdges(this.pos.x);
-    if (fromDock && m0 && m0.visible && !this.reduced) {
-      const x0 = clamp(this.pos.x + this.h * 0.5, this.h * 0.5, window.innerWidth * 0.4);
-      const x = Math.min(x0 + Math.max(160, window.innerWidth * 0.14), window.innerWidth - this.h);
-      const edgeAt = xx => () => this.marqueeEdges(xx) || { top: this.pos.y, bottom: this.pos.y };
-      const edge = edgeAt(x);
-      // jump up and grab the bottom edge...
-      this.faceAway = true;
-      await step(this.moveTo(() => ({ x: x0, y: edgeAt(x0)().bottom + this.h * 1.02 }), { dur: 650, ease: 'out', clip: 'hang' }));
-      this.clip = 'hang';
-      await step(this.play('swing', 700));
-      // ...monkey bars along it...
-      await step(this.moveTo(() => ({ x, y: edge().bottom + this.h * 1.02 }), { dur: 1300, ease: 'linear', clip: 'climb' }));
-      // ...climb up over the front of the marquee, hand over hand...
-      await step(this.moveTo(() => ({ x, y: edge().top + 4 }), { dur: 1500, ease: 'linear', clip: 'climb' }));
-      await step(this.play('pullup', 420));
-      // ...turn round on top, wave, and hop back up to the logo
-      this.clip = 'idle';
-      this.faceAway = false;
-      this.follow = () => ({ x, y: edge().top + 4 });
-      await step(sleep(250));
-      await step(this.play('wave', 1100));
-      this.follow = null;
-    }
     await step(this.moveTo(spot, { dur: 950, arc: 170, clip: 'fly', h: spot().h, flip: TAU }));
     this.follow = spot;
     this.where = 'hero';
     await step(this.play('land', 240));
   }
 
-  // hop onto the marquee, run along it, climb down its front, dangle, and drop into the corner
+  // hop onto the marquee, surf down it, and somersault into the corner
   async viaMarquee() {
     const step = this.newRun();
     this.where = 'travel';
@@ -874,39 +692,19 @@ export default class Companion {
     this.occluderRect = null;
     this.show(true);
     const dock = this.dockSpot();
-    const vw = window.innerWidth;
-    const m0 = this.marqueeEdges(this.pos.x);
-    if (!m0 || !m0.visible || this.reduced) {
+    const m = document.querySelector('.bk-marquee');
+    const mr = m && m.getBoundingClientRect();
+    if (!mr || mr.bottom < 60 || mr.top > window.innerHeight - 40) {
       // the marquee is already off screen: just jump into the corner
       await step(this.moveTo(() => this.dockSpot(), { dur: 800, arc: 140, clip: 'fly', h: dock.h, flip: TAU }));
     } else {
-      const h = dock.h;
-      const x1 = clamp(this.pos.x, vw * 0.55, vw - 80);
-      const x2 = clamp(vw * 0.32, dock.x + h * 0.7, vw - 80);
-      const edge = x => () => this.marqueeEdges(x) || { top: this.dockSpot().y - h, bottom: this.dockSpot().y - h };
-      // onto the marquee...
-      await step(this.moveTo(() => ({ x: x1, y: edge(x1)().top + 4 }), { dur: 650, arc: 90, clip: 'fly', h }));
+      const vw = window.innerWidth;
+      const startX = clamp(this.pos.x, vw * 0.55, vw - 80);
+      const onMarquee = x => () => ({ x, y: this.marqueeLine(x) ?? this.dockSpot().y });
+      await step(this.moveTo(onMarquee(startX), { dur: 650, arc: 90, clip: 'fly', h: dock.h }));
       await step(this.play('land', 180));
-      // ...run along the top while the words scroll under his feet...
-      await step(this.moveTo(() => ({ x: x2, y: edge(x2)().top + 4 }), { dur: 1300, clip: 'run' }));
-      // ...turn round and climb down the front, hand over hand...
-      this.faceAway = true;
-      this.follow = () => ({ x: x2, y: edge(x2)().top + 4 });
-      await step(sleep(280));
-      this.follow = null;
-      await step(this.moveTo(() => ({ x: x2, y: edge(x2)().bottom + h * 1.02 }), { dur: 1500, ease: 'linear', clip: 'climb' }));
-      // ...monkey bars along the bottom edge, hand over hand...
-      const x3 = Math.max(dock.x + h * 0.35, x2 - Math.max(160, vw * 0.14));
-      await step(this.moveTo(() => ({ x: x3, y: edge(x3)().bottom + h * 1.02 }), { dur: 1500, ease: 'linear', clip: 'climb' }));
-      // ...dangle and swing...
-      this.clip = 'hang';
-      this.follow = () => ({ x: x3, y: edge(x3)().bottom + h * 1.02 });
-      await step(this.play('swing', 1000));
-      this.follow = null;
-      // ...and let go: somersault into the corner
-      this.clip = 'idle';
-      this.faceAway = false;
-      await step(this.moveTo(() => this.dockSpot(), { dur: 800, arc: 50, ease: 'in', clip: 'fly', flip: TAU }));
+      await step(this.moveTo(onMarquee(Math.max(70, dock.x + 40)), { dur: 1500, ease: 'in', clip: 'surf' }));
+      await step(this.moveTo(() => this.dockSpot(), { dur: 750, arc: 120, clip: 'fly', flip: TAU }));
     }
     this.follow = () => this.dockSpot();
     this.where = 'dock';

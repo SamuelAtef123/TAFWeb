@@ -425,7 +425,7 @@ export default function Mascot() {
       if (!r || !r.height) return;
       const vh = window.innerHeight;
       const gone = r.bottom < 70 + r.height * 0.25 || r.top > vh;
-      const back = r.top > 70 - r.height * 0.35 && r.bottom < vh + r.height * 0.1; // most of the logo Tino is in view
+      const back = r.top > 50 && r.bottom < vh + r.height * 0.1;
       if (m === 'hero' && gone) {
         setSay(null);
         goTo('dock');
