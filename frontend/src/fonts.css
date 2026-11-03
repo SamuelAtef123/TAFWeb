@@ -1,0 +1,22 @@
+/*
+  Tino & Friends type: two French faces, served with the site (no Google Fonts request).
+  - GFS Didot: the Didot of Paris shop windows, for headings and the name.
+  - EB Garamond: Claude Garamond's book face, for everything else; its italic names the treats.
+*/
+@import '@fontsource/gfs-didot/400.css';
+@import '@fontsource/eb-garamond/400.css';
+@import '@fontsource/eb-garamond/500.css';
+@import '@fontsource/eb-garamond/600.css';
+@import '@fontsource/eb-garamond/700.css';
+@import '@fontsource/eb-garamond/400-italic.css';
+@import '@fontsource/eb-garamond/500-italic.css';
+
+:root {
+  --f-display: 'GFS Didot', Didot, 'Bodoni 72', 'Libre Bodoni', Georgia, serif;
+  --f-text: 'EB Garamond', Garamond, 'Times New Roman', serif;
+}
+
+html {
+  /* Garamond has a small x-height: size it up so it reads like the old sans at the same px */
+  font-size-adjust: 0.46;
+}

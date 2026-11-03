@@ -912,7 +912,7 @@ export default function BasketMenu() {
                   >
                     <div className="bk-img">
                       <Photo src={p.image} alt={p.name} emoji={CATEGORY_ICONS[p.category]} />
-                      {!p.available ? <span className="bm-ribbon bm-soldout">Sold out</span> : p.featured && <span className="bm-ribbon">★ Signature</span>}
+                      {!p.available ? <span className="bm-ribbon bm-soldout">Sold out</span> : p.featured && <span className="bm-ribbon">Signature</span>}
                     </div>
                     <div className="bk-info">
                       <p className="bk-cat">{p.category}</p>

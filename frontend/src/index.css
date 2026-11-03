@@ -2,7 +2,7 @@ body {
   margin: 0;
   background: #f7f2e9;
   color: #29251f;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--f-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

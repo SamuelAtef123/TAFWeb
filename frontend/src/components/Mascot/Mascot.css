@@ -204,7 +204,7 @@
   background: #fffaf0;
   color: #24140c;
   box-shadow: 0 18px 40px rgba(36, 20, 12, 0.3), 0 0 0 1px rgba(138, 75, 36, 0.16);
-  font: 400 15px/1.5 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font: 400 15px/1.5 var(--f-text);
   animation: tino-pop 0.38s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
 .tino-bubble-in::before {
@@ -231,7 +231,7 @@
 .tino-name {
   display: block;
   margin-bottom: 2px;
-  font: 700 11px 'DM Sans', system-ui, sans-serif;
+  font: 700 11px var(--f-text);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #8a4b24;
@@ -274,7 +274,7 @@
   border-radius: 999px;
   background: #fff;
   color: #3b2314;
-  font: 600 13px 'DM Sans', system-ui, sans-serif;
+  font: 600 13px var(--f-text);
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s, transform 0.2s;
 }
@@ -369,7 +369,7 @@
   border-radius: 999px;
   background: #24140c;
   color: #f4dfae;
-  font: 700 13px 'DM Sans', system-ui, sans-serif;
+  font: 700 13px var(--f-text);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   animation: tino-pop 0.4s cubic-bezier(0.3, 1.5, 0.5, 1);

@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { spokenText, clipId } from './voiceClips';
+
+export { spokenText };
 
 /*
-  Tino's voice, using the browser's built-in speech (Web Speech API).
-  Free, no audio files, and it can say anything - including product names.
-  The device's English voice is pitched up so it sounds like a young boy.
+  Tino's voice: recorded clips (see voiceClips.js) for everything he normally says,
+  and the browser's built-in speech (Web Speech API) for anything that has no recording.
 
   Browsers only let a page talk after the visitor has clicked/tapped something,
   so before that `speak` returns false and the bubble offers a "tap to hear" button.
@@ -15,20 +17,6 @@ const RATE = 1.06;
 
 const supported = () =>
   typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
-
-// what to say out loud: no emoji, no arrows, "&" read as "and", numbered steps without "1)"
-export const spokenText = text =>
-  String(text || '')
-    .replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}]/gu, '')
-    .replace(/&/g, ' and ')
-    .replace(/\s*[—–]\s*/g, ', ')
-    .replace(/\+/g, ' plus ')
-    .replace(/…/g, '...')
-    .replace(/[→↑←↓]/g, '')
-    .replace(/(^|\s)\d\)\s*/g, '$1')
-    .replace(/\s+/g, ' ')
-    .replace(/\s+([),.!?])/g, '$1')
-    .trim();
 
 // prefer a male English voice (pitched up it sounds like a boy; pitched-up female voices sound like a girl)
 const PREFERRED = [
@@ -56,16 +44,41 @@ const readPref = () => {
   }
 };
 
+// which recordings exist (public/voice/manifest.json), loaded once per page
+let clipsPromise = null;
+const loadClips = () => {
+  if (!clipsPromise) {
+    clipsPromise = fetch('/voice/manifest.json')
+      .then(r => (r.ok ? r.json() : { clips: [] }))
+      .then(m => new Set(m.clips || []))
+      .catch(() => new Set());
+  }
+  return clipsPromise;
+};
+
 export default function useVoice() {
-  const ok = supported();
+  const synthOK = supported();
+  const ok = synthOK || typeof Audio !== 'undefined';
   const [on, setOnState] = useState(readPref);
   const [speaking, setSpeaking] = useState(false);
   const [spokenKey, setSpokenKey] = useState(null);
   const voiceRef = useRef(null);
   const timer = useRef(0);
+  const clips = useRef(new Set());
+  const audio = useRef(null);
 
   useEffect(() => {
-    if (!ok) return undefined;
+    let alive = true;
+    loadClips().then(set => {
+      if (alive) clips.current = set;
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!synthOK) return undefined;
     const load = () => {
       voiceRef.current = chooseVoice();
     };
@@ -76,14 +89,25 @@ export default function useVoice() {
       clearTimeout(timer.current);
       window.speechSynthesis.cancel();
     };
-  }, [ok]);
+  }, [synthOK]);
+
+  const silence = useCallback(() => {
+    clearTimeout(timer.current);
+    if (audio.current) {
+      audio.current.onended = null;
+      audio.current.onpause = null;
+      audio.current.pause();
+      audio.current = null;
+    }
+    if (synthOK) window.speechSynthesis.cancel();
+  }, [synthOK]);
+
+  useEffect(() => silence, [silence]);
 
   const stop = useCallback(() => {
-    if (!ok) return;
-    clearTimeout(timer.current);
-    window.speechSynthesis.cancel();
+    silence();
     setSpeaking(false);
-  }, [ok]);
+  }, [silence]);
 
   // say a line; `force` is used right after a click on the speaker button
   const speak = useCallback(
@@ -94,8 +118,24 @@ export default function useVoice() {
       if (!force && ua && !ua.hasBeenActive) return false; // browser would block it anyway
       const words = spokenText(text);
       if (!words) return false;
-      clearTimeout(timer.current);
-      window.speechSynthesis.cancel();
+      silence();
+      setSpokenKey(key);
+
+      // 1) the recorded voice
+      const id = clipId(words);
+      if (clips.current.has(id)) {
+        const a = new Audio(`/voice/${id}.mp3`);
+        audio.current = a;
+        a.onplaying = () => setSpeaking(true);
+        a.onended = () => setSpeaking(false);
+        a.onpause = () => setSpeaking(false);
+        a.onerror = () => setSpeaking(false);
+        a.play().catch(() => setSpeaking(false));
+        return true;
+      }
+
+      // 2) no recording for this line: the browser's own voice
+      if (!synthOK) return false;
       const u = new SpeechSynthesisUtterance(words);
       if (!voiceRef.current) voiceRef.current = chooseVoice();
       if (voiceRef.current) {
@@ -112,10 +152,9 @@ export default function useVoice() {
       u.onerror = () => setSpeaking(false);
       // Chrome sometimes drops a speak() that comes right after cancel()
       timer.current = setTimeout(() => window.speechSynthesis.speak(u), 40);
-      setSpokenKey(key);
       return true;
     },
-    [ok, on]
+    [ok, synthOK, on, silence]
   );
 
   const setOn = useCallback(

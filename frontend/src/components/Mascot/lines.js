@@ -14,6 +14,23 @@ export const R = {
   bye: { id: 'bye', label: 'Bye, Tino 👋' },
 };
 
+// Lines with a product name in them. Each one is recorded once per product
+// (scripts/voice), so keep these lists short.
+const FEAST = n => `${n} treats already — that's a proper feast! 🧺`;
+const ADDED_NAMED = [
+  name => `${name}? Excellent choice!`,
+  name => `Ooh, ${name} — one of my favourites!`,
+  name => `Mmm… ${name}. Smells great already.`,
+];
+const ADDED_PLAIN = ['Into the basket it goes! 🧺'];
+const CARRYING_NAMED = [
+  name => `Special delivery! One ${name}, coming right up! 🏃`,
+  name => `Don't worry, I won't eat the ${name}… probably. 😋`,
+  name => `Hot! Hot! Hot! Fresh ${name} coming through! 🔥`,
+];
+const CARRYING_PLAIN = ['Balancing act! 🎪 Nobody sneeze!', 'Beep beep! Tino Express! 🚚'];
+export const VOICE_TEMPLATES = { FEAST, ADDED_NAMED, ADDED_PLAIN, CARRYING_NAMED, CARRYING_PLAIN };
+
 export const LINES = {
   hello: {
     text: "Hi, I'm Tino! 👋 Welcome to Tino & Friends. Everything here is baked fresh every morning. Hungry?",
@@ -63,14 +80,8 @@ export const LINES = {
   nudge: { text: "Can't decide? I can pick something for you!", replies: [R.surprise] },
   emptied: { text: 'A fresh start! Want me to pick something?', replies: [R.surprise] },
   removed: ['Changed your mind? No problem.', 'Back on the shelf it goes!'],
-  feast: n => `${n} treats already — that's a proper feast! 🧺`,
-  added: name =>
-    pick([
-      `${name}? Excellent choice!`,
-      `Ooh, ${name} — one of my favourites!`,
-      'Into the basket it goes! 🧺',
-      `Mmm… ${name}. Smells great already.`,
-    ]),
+  feast: n => FEAST(n),
+  added: name => pick([...ADDED_NAMED.map(f => f(name)), ...ADDED_PLAIN]),
   cta: 'Follow me — the good stuff is down here! 🥐',
   surpriseClick: 'Ooh, a surprise! I love surprises. 🎁',
 
@@ -102,15 +113,7 @@ export const LINES = {
     { text: 'Fun fact: I never skip breakfast. Or second breakfast. 🥐', move: 'bow' },
   ],
   // while he carries an order to the basket
-  carrying: name =>
-    pick([
-      `Special delivery! One ${name}, coming right up! 🏃`,
-      `Don't worry, I won't eat the ${name}… probably. 😋`,
-      'Balancing act! 🎪 Nobody sneeze!',
-      `Hot! Hot! Hot! Fresh ${name} coming through! 🔥`,
-      'Beep beep! Tino Express! 🚚',
-      `Got it! This ${name} is riding first class. ✨`,
-    ]),
+  carrying: name => pick([...CARRYING_NAMED.map(f => f(name)), ...CARRYING_PLAIN]),
 };
 
 // Said when someone taps a category chip in the menu.

@@ -3,7 +3,7 @@
   display: grid;
   gap: 8px;
   margin-top: 22px;
-  font-family: Arial, sans-serif;
+  font-family: var(--f-text);
 }
 .co-tabs {
   display: grid;
@@ -20,7 +20,7 @@
   border-radius: 999px;
   background: transparent;
   color: var(--ink, #29251f);
-  font: bold 12px Arial, sans-serif;
+  font: bold 12px var(--f-text);
   letter-spacing: 0.04em;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
@@ -31,7 +31,7 @@
 }
 .co-auth label {
   margin-top: 6px;
-  font: bold 11px Arial, sans-serif;
+  font: bold 11px var(--f-text);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink, #29251f);
@@ -44,7 +44,7 @@
   border-radius: 10px;
   background: var(--paper, #fffdf8);
   color: var(--ink, #29251f);
-  font: 15px Arial, sans-serif;
+  font: 15px var(--f-text);
   outline: 0;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -58,7 +58,7 @@
   border-radius: 10px;
   background: rgba(184, 82, 50, 0.12);
   color: #8f3b1f;
-  font: 13px/1.4 Arial, sans-serif;
+  font: 13px/1.4 var(--f-text);
 }
 .co-submit,
 .order-summary .primary-button {
@@ -77,7 +77,7 @@
   border: 0;
   background: none;
   color: var(--rust, #b85232);
-  font: 13px Arial, sans-serif;
+  font: 13px var(--f-text);
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
@@ -88,7 +88,7 @@
 }
 .co-who {
   margin: 18px 0 0;
-  font: 14px Arial, sans-serif;
+  font: 14px var(--f-text);
   color: #5d5547;
 }
 .co-who .co-link {
@@ -137,7 +137,7 @@
   margin: 26px 0 8px;
   padding: 0;
   list-style: none;
-  font: 15px Arial, sans-serif;
+  font: 15px var(--f-text);
   text-align: left;
 }
 .co-receipt li {
@@ -160,5 +160,5 @@
   border-radius: 999px;
   background: rgba(116, 129, 108, 0.16);
   color: #4c5a45;
-  font: bold 13px Arial, sans-serif;
+  font: bold 13px var(--f-text);
 }
