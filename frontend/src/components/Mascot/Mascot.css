@@ -322,6 +322,9 @@
   border: 0;
   border-radius: 0;
   background: transparent;
+  display: grid;
+  place-items: center;
+  color: #24140c;
   font-size: 13px;
   line-height: 1;
   cursor: pointer;

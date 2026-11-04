@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { MENU, CATEGORY_ICONS } from '../../data/menu';
+import { MENU } from '../../data/menu';
+import { SpeakerIcon } from '../icons';
 import { fromApi, normalizeCart } from '../../utils/shop';
 import './BasketMenu.css';
 
@@ -250,13 +251,13 @@ const SECTION_OF = {
   'New Drinks': 'Cold Drinks',
 };
 
-/* ---------- image with an emoji fallback ---------- */
-function Photo({ src, alt, emoji, className }) {
+/* ---------- image with a quiet fallback mark ---------- */
+function Photo({ src, alt, className }) {
   const [bad, setBad] = useState(false);
   if (!src || bad) {
     return (
       <div className={`bm-fallback ${className || ''}`} aria-hidden="true">
-        {emoji}
+        ✦
       </div>
     );
   }
@@ -754,7 +755,7 @@ export default function BasketMenu() {
       }}
     >
       <div className="bk-img">
-        <Photo src={p.image} alt={p.name} emoji={CATEGORY_ICONS[p.category]} />
+        <Photo src={p.image} alt={p.name} />
         {!p.available ? <span className="bm-ribbon bm-soldout">Sold out</span> : p.featured && <span className="bm-ribbon">signature</span>}
       </div>
       <div className="bk-info">
@@ -799,7 +800,7 @@ export default function BasketMenu() {
               aria-label={sound ? 'Turn sounds off' : 'Turn sounds on'}
               title={sound ? 'Sounds on' : 'Sounds off'}
             >
-              {sound ? '🔊' : '🔈'}
+              <SpeakerIcon muted={!sound} />
             </button>
 
             <p className="bm-eyebrow">Your basket</p>
@@ -824,7 +825,7 @@ export default function BasketMenu() {
                         }}
                       >
                         <div className="bm-med-in" key={`${id}:${it.quantity}`} style={{ '--r': `${slot.r}deg` }}>
-                          <Photo src={it.image} alt={it.name} emoji={CATEGORY_ICONS[it.category] || '🥐'} />
+                          <Photo src={it.image} alt={it.name} />
                           {it.quantity > 1 && <b className="bm-qty">×{it.quantity}</b>}
                         </div>
                       </div>
@@ -889,7 +890,7 @@ export default function BasketMenu() {
 
             {bubble && (
               <div className="bm-bubble" role="status">
-                <Photo src={bubble.image} alt="" emoji="☕" className="bm-bubble-img" />
+                <Photo src={bubble.image} alt="" className="bm-bubble-img" />
                 <div>
                   <small>Goes great with</small>
                   <strong>{bubble.name}</strong>
@@ -929,7 +930,7 @@ export default function BasketMenu() {
                 />
               </label>
               <button type="button" className="bm-surprise" onClick={surprise}>
-                🎲 Surprise me
+                Surprise me
               </button>
             </div>
 
@@ -943,9 +944,6 @@ export default function BasketMenu() {
                   className={category === c ? 'active' : ''}
                   onClick={() => setCategory(c)}
                 >
-                  <span className="bm-chip-ic" aria-hidden="true">
-                    {CATEGORY_ICONS[c]}
-                  </span>
                   {c}
                   <em>{counts[c]}</em>
                 </button>
@@ -975,7 +973,7 @@ export default function BasketMenu() {
       {/* ---------- what you're carrying while you drag ---------- */}
       <div ref={ghostRef} className="bm-ghost" aria-hidden="true">
         {ghostProduct && (
-          <Photo src={ghostProduct.image} alt="" emoji={CATEGORY_ICONS[ghostProduct.category]} />
+          <Photo src={ghostProduct.image} alt="" />
         )}
       </div>
 
@@ -996,7 +994,7 @@ export default function BasketMenu() {
 
         {cart.length === 0 ? (
           <div className="bm-panel-empty">
-            <span>🧺</span>
+            <span>✦</span>
             <p>Your basket is waiting.</p>
             <small>Drag something warm and buttery into it.</small>
           </div>
@@ -1007,7 +1005,7 @@ export default function BasketMenu() {
               return (
                 <li key={id}>
                   <div className="bm-line-img">
-                    <Photo src={it.image} alt="" emoji={CATEGORY_ICONS[it.category] || '🥐'} />
+                    <Photo src={it.image} alt="" />
                   </div>
                   <div className="bm-line-info">
                     <strong>

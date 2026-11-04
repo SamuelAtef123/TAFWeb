@@ -84,6 +84,9 @@ body.bm-grabbing {
   border: 1px solid var(--latte);
   border-radius: 0;
   background: rgba(255, 255, 255, 0.7);
+  display: grid;
+  place-items: center;
+  color: var(--espresso);
   font-size: 13px;
   cursor: pointer;
   transition: transform 0.2s, background 0.2s;

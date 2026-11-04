@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { LINES, CATEGORY_LINES, pick } from './lines';
 import useVoice from './useVoice';
+import { SpeakerIcon } from '../icons';
 import './Mascot.css';
 
 /*
@@ -734,7 +735,7 @@ export default function Mascot() {
       return;
     }
     const line = pick(LINES.poke);
-    speak({ ...line, replies: [...line.replies, { id: 'bye', label: 'Bye, Tino 👋' }] }, { conversation: true });
+    speak({ ...line, replies: [...line.replies, { id: 'bye', label: 'Bye, Tino' }] }, { conversation: true });
     doAct('hop');
   };
 
@@ -918,7 +919,7 @@ export default function Mascot() {
                   }
                   title={voiceState === 'off' ? 'Voice off' : voiceState === 'tap' ? 'Tap to hear Tino' : 'Mute'}
                 >
-                  {voiceState === 'off' ? '🔇' : '🔊'}
+                  <SpeakerIcon muted={voiceState === 'off'} />
                 </button>
               )}
               <button type="button" className="tino-x" onClick={hush} aria-label="Close">

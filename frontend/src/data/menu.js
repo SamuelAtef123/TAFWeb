@@ -129,24 +129,3 @@ export const ALL_MENU = rows.map(([id, name, category, price, description, featu
 export const MENU = ALL_MENU.filter(p => !p.hidden);
 
 export const CATEGORIES = [...new Set(MENU.map(p => p.category))];
-
-export const CATEGORY_ICONS = {
-  All: '🧺',
-  Viennoiserie: '🥐',
-  Cookies: '🍪',
-  Muffins: '🧁',
-  'English Cake': '🍰',
-  Individuals: '🍮',
-  Bread: '🥖',
-  Salad: '🥗',
-  Sandwiches: '🥪',
-  Tarts: '🥧',
-  Choux: '🍩',
-  'Hot Drinks': '☕',
-  'V60 Coffee': '🫖',
-  'Cold Drinks': '🧋',
-  Smoothies: '🥤',
-  Beverages: '💧',
-  Extras: '🍯',
-  'New Drinks': '✨',
-};

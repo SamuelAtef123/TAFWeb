@@ -141,7 +141,7 @@ function Cart() {
           </ul>
 
           {order.pointsEarned > 0 && (
-            <p className="co-points">★ You earned {order.pointsEarned} bakery points</p>
+            <p className="co-points">You earned {order.pointsEarned} bakery points</p>
           )}
 
           <Link className="primary-button" to="/">
