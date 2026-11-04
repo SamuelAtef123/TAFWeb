@@ -235,7 +235,8 @@ function Ticker({ value }) {
   return <>{fmt(shown)}</>;
 }
 
-/* Small categories share a section on the full menu (display only - the data keeps its own category) */
+/* Small categories share a section: the menu sections AND the category buttons use these groups
+   (display only - the data keeps its own category) */
 const SECTION_OF = {
   Cookies: 'Sweets',
   Muffins: 'Sweets',
@@ -250,6 +251,7 @@ const SECTION_OF = {
   Beverages: 'Cold Drinks',
   'New Drinks': 'Cold Drinks',
 };
+const sectionOf = p => SECTION_OF[p.category] || p.category;
 
 /* ---------- image with a quiet fallback mark ---------- */
 function Photo({ src, alt, className }) {
@@ -352,12 +354,14 @@ export default function BasketMenu() {
     setCart(prev => normalizeCart(prev, menu));
   }, [menu]);
 
-  const categories = useMemo(() => [...new Set(menu.map(p => p.category))], [menu]);
+  // the buttons are the menu's sections (Viennoiserie, Sweets, Hot Drinks...), in menu order
+  const categories = useMemo(() => [...new Set(menu.map(sectionOf))], [menu]);
 
   const counts = useMemo(() => {
     const m = { All: menu.length };
     menu.forEach(p => {
-      m[p.category] = (m[p.category] || 0) + 1;
+      const sec = sectionOf(p);
+      m[sec] = (m[sec] || 0) + 1;
     });
     return m;
   }, [menu]);
@@ -366,22 +370,22 @@ export default function BasketMenu() {
     const q = query.trim().toLowerCase();
     return menu.filter(
       p =>
-        (category === 'All' || p.category === category) &&
+        (category === 'All' || sectionOf(p) === category) &&
         (!q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q))
     );
   }, [menu, category, query]);
 
-  // Menu laid out in category sections (one section when a category or search is active)
+  // Menu laid out in sections (one section when a category button or search is active)
   const sections = useMemo(() => {
     if (query.trim()) return [{ title: `results for “${query.trim()}”`, items: filtered }];
     const groups = new Map();
     filtered.forEach(p => {
-      const title = category === 'All' ? SECTION_OF[p.category] || p.category : p.category;
+      const title = sectionOf(p);
       if (!groups.has(title)) groups.set(title, []);
       groups.get(title).push(p);
     });
     return [...groups].map(([title, items]) => ({ title, items }));
-  }, [filtered, query, category]);
+  }, [filtered, query]);
 
   /* ---------- cart ---------- */
   const addToCart = useCallback((product, qty = 1) => {
