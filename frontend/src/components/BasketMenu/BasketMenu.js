@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { MENU } from '../../data/menu';
-import { SpeakerIcon } from '../icons';
 import { fromApi, normalizeCart } from '../../utils/shop';
 import './BasketMenu.css';
 
@@ -64,153 +63,6 @@ const PAIRS = {
   Smoothies: ['COO001'],
   'New Drinks': ['COO001'],
 };
-
-/* ---------- tiny synthesized sounds ---------- */
-let audioCtx = null;
-function audio() {
-  if (!audioCtx) {
-    const C = window.AudioContext || window.webkitAudioContext;
-    if (!C) return null;
-    audioCtx = new C();
-  }
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  return audioCtx;
-}
-function playPop() {
-  const a = audio();
-  if (!a) return;
-  const t = a.currentTime;
-  const o = a.createOscillator();
-  const g = a.createGain();
-  o.type = 'sine';
-  o.frequency.setValueAtTime(380, t);
-  o.frequency.exponentialRampToValueAtTime(920, t + 0.09);
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(0.16, t + 0.01);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-  o.connect(g);
-  g.connect(a.destination);
-  o.start(t);
-  o.stop(t + 0.25);
-  const len = Math.floor(a.sampleRate * 0.12);
-  const buf = a.createBuffer(1, len, a.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
-  const n = a.createBufferSource();
-  n.buffer = buf;
-  const f = a.createBiquadFilter();
-  f.type = 'bandpass';
-  f.frequency.value = 2600;
-  const g2 = a.createGain();
-  g2.gain.value = 0.1;
-  n.connect(f);
-  f.connect(g2);
-  g2.connect(a.destination);
-  n.start(t + 0.06);
-}
-
-/* ---------- crumbs + sparkles (canvas) ---------- */
-function useParticles(canvasRef) {
-  const parts = useRef([]);
-  const raf = useRef(0);
-  const size = useRef({ w: 0, h: 0, dpr: 1 });
-
-  useEffect(() => {
-    const c = canvasRef.current;
-    if (!c) return undefined;
-    const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
-      const w = c.parentElement.clientWidth;
-      const h = c.parentElement.clientHeight;
-      size.current = { w, h, dpr };
-      c.width = w * dpr;
-      c.height = h * dpr;
-    };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(c.parentElement);
-    return () => ro.disconnect();
-  }, [canvasRef]);
-
-  const loop = useCallback(() => {
-    const c = canvasRef.current;
-    if (!c) return;
-    const ctx = c.getContext('2d');
-    const { w, h, dpr } = size.current;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, w, h);
-    const ps = parts.current;
-    for (let i = ps.length - 1; i >= 0; i--) {
-      const p = ps[i];
-      p.life -= 1;
-      if (p.life <= 0) {
-        ps.splice(i, 1);
-        continue;
-      }
-      p.vy += p.g;
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vx *= 0.985;
-      p.rot += p.vr;
-      ctx.save();
-      ctx.globalAlpha = Math.min(1, p.life / p.fade);
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rot);
-      ctx.fillStyle = p.color;
-      if (p.type === 'star') {
-        const s = p.size * 1.7;
-        ctx.beginPath();
-        for (let k = 0; k < 8; k++) {
-          const r = k % 2 ? s * 0.26 : s;
-          const a = (k * Math.PI) / 4;
-          ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-        }
-        ctx.closePath();
-        ctx.fill();
-      } else {
-        ctx.beginPath();
-        ctx.ellipse(0, 0, p.size, p.size * 0.65, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-    }
-    raf.current = ps.length ? requestAnimationFrame(loop) : 0;
-  }, [canvasRef]);
-
-  const burst = useCallback(
-    (x, y) => {
-      const crumbColors = ['#c98f4b', '#b8742e', '#8a5a28', '#d9a35a', '#a8692f'];
-      const sparkColors = ['#e0a458', '#d4782f', '#f2c36b', '#f0a23a'];
-      for (let i = 0; i < 26; i++) {
-        const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.3;
-        const sp = 2 + Math.random() * 5.2;
-        parts.current.push({
-          type: 'crumb', x, y,
-          vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: 0.22,
-          size: 2 + Math.random() * 3.4, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 0.3,
-          life: 55 + Math.random() * 30, fade: 25,
-          color: crumbColors[(Math.random() * crumbColors.length) | 0],
-        });
-      }
-      for (let i = 0; i < 14; i++) {
-        const a = Math.random() * Math.PI * 2;
-        const sp = 0.6 + Math.random() * 2.6;
-        parts.current.push({
-          type: 'star', x, y,
-          vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1.4, g: 0.03,
-          size: 2.2 + Math.random() * 3, rot: Math.random() * 3, vr: (Math.random() - 0.5) * 0.18,
-          life: 50 + Math.random() * 40, fade: 30,
-          color: sparkColors[(Math.random() * sparkColors.length) | 0],
-        });
-      }
-      if (!raf.current) raf.current = requestAnimationFrame(loop);
-    },
-    [loop]
-  );
-
-  useEffect(() => () => cancelAnimationFrame(raf.current), []);
-  return burst;
-}
 
 /* ---------- number that rolls up to its new value ---------- */
 function Ticker({ value }) {
@@ -281,26 +133,19 @@ export default function BasketMenu() {
   const [dragId, setDragId] = useState(null);
   const [overStage, setOverStage] = useState(false);
   const [bubble, setBubble] = useState(null);
-  const [sound, setSound] = useState(() => localStorage.getItem('bm-sound') === '1');
 
   const stageRef = useRef(null);
   const basketRef = useRef(null);
   const mouthRef = useRef(null);
-  const tagRef = useRef(null);
   const ghostRef = useRef(null);
-  const canvasRef = useRef(null);
   const dragRef = useRef(null);
   const overRef = useRef(false);
   const cartRef = useRef(cart);
   const menuRef = useRef(menu);
-  const soundRef = useRef(sound);
   const bubbleTimer = useRef(0);
 
   cartRef.current = cart;
   menuRef.current = menu;
-  soundRef.current = sound;
-
-  const burst = useParticles(canvasRef);
 
   const count = cart.reduce((s, i) => s + i.quantity, 0);
   const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
@@ -314,14 +159,6 @@ export default function BasketMenu() {
     // let the page header update its cart counter
     window.dispatchEvent(new Event('cart:updated'));
   }, [cart]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('bm-sound', sound ? '1' : '0');
-    } catch (err) {
-      /* ignore */
-    }
-  }, [sound]);
 
   useEffect(() => {
     const onKey = e => e.key === 'Escape' && setPanel(false);
@@ -447,12 +284,8 @@ export default function BasketMenu() {
     const sr = stage.getBoundingClientRect();
     const x = pt.x - sr.left;
     const y = pt.y - sr.top;
-    burst(x, y);
-    spawn('bm-ripple', x, y);
-    spawn('bm-ripple bm-ripple2', x, y);
     spawn('bm-float', x, y - 34, `+1 ${product.name}`);
     pulse(basketRef, 'squash');
-    pulse(tagRef, 'swing');
     if (navigator.vibrate) {
       try {
         navigator.vibrate(12);
@@ -460,7 +293,6 @@ export default function BasketMenu() {
         /* not supported */
       }
     }
-    if (soundRef.current) playPop();
   };
 
   const suggestFor = product => {
@@ -796,18 +628,10 @@ export default function BasketMenu() {
             style={{ '--lean': 0 }}
             aria-label="Your basket"
           >
-            <button
-              type="button"
-              className={`bm-sound ${sound ? 'on' : ''}`}
-              onClick={() => setSound(s => !s)}
-              aria-pressed={sound}
-              aria-label={sound ? 'Turn sounds off' : 'Turn sounds on'}
-              title={sound ? 'Sounds on' : 'Sounds off'}
-            >
-              <SpeakerIcon muted={!sound} />
-            </button>
-
-            <p className="bm-eyebrow">Your basket</p>
+            <header className="bm-head">
+              <p className="bm-eyebrow">Your basket</p>
+              <span className="bm-count">{count ? `${count} ${count === 1 ? 'item' : 'items'}` : 'Empty'}</span>
+            </header>
 
             <div className="bm-basket-wrap">
               <div className="bm-shadow" aria-hidden="true" />
@@ -855,48 +679,34 @@ export default function BasketMenu() {
                   <span className="bm-mouth-label">Drop it in</span>
                 </div>
 
-                <svg className="bm-steam" viewBox="0 0 200 120" aria-hidden="true">
-                  <path d="M70 120 C55 95 90 85 72 55 C62 36 82 24 74 4" />
-                  <path d="M104 120 C88 98 122 84 106 56 C96 38 114 26 108 6" />
-                  <path d="M136 120 C122 97 152 86 138 58 C130 42 144 30 140 10" />
-                </svg>
               </div>
 
-              <button
-                type="button"
-                ref={tagRef}
-                className="bm-tag"
-                onClick={() => setPanel(true)}
-                aria-label={`Open basket: ${count} items, ${fmt(total)} EGP`}
-              >
-                <i className="bm-tag-hole" />
-                <span className="bm-tag-n">
-                  {count} {count === 1 ? 'treat' : 'treats'}
-                </span>
-                <span className="bm-tag-total">
-                  <Ticker value={total} /> <small>EGP</small>
-                </span>
-              </button>
 
               {hidden > 0 && <span className="bm-more">+{hidden} more</span>}
             </div>
 
-            <p className={`bm-hint ${cart.length ? 'quiet' : ''}`}>Drag a treat onto the basket, or tap +</p>
-
-            <div className="bm-actions">
-              <button type="button" onClick={() => setPanel(true)}>
-                Review
+            {/* the total, set like the last line of a receipt; opens the full list */}
+            {cart.length ? (
+              <button
+                type="button"
+                className="bm-summary"
+                onClick={() => setPanel(true)}
+                aria-label={`Review basket: ${count} items, ${fmt(total)} EGP`}
+              >
+                <span className="bm-sum-label">Subtotal</span>
+                <span className="bm-sum-total">
+                  <Ticker value={total} /> <small>EGP</small>
+                </span>
               </button>
-              <Link className={cart.length ? '' : 'disabled'} to="/cart" aria-disabled={!cart.length}>
-                Checkout →
-              </Link>
-            </div>
+            ) : (
+              <p className="bm-hint">Drag a treat into the basket, or tap +</p>
+            )}
 
             {bubble && (
               <div className="bm-bubble" role="status">
                 <Photo src={bubble.image} alt="" className="bm-bubble-img" />
                 <div>
-                  <small>Goes great with</small>
+                  <small>Pairs well with</small>
                   <strong>{bubble.name}</strong>
                   <span>{fmt(bubble.price)} EGP</span>
                 </div>
@@ -918,7 +728,16 @@ export default function BasketMenu() {
               </div>
             )}
 
-            <canvas ref={canvasRef} className="bm-particles" aria-hidden="true" />
+            <div className="bm-actions">
+              <button type="button" onClick={() => setPanel(true)}>
+                Review
+              </button>
+              <Link className={cart.length ? '' : 'disabled'} to="/cart" aria-disabled={!cart.length}>
+                Checkout →
+              </Link>
+            </div>
+
+
           </aside>
 
           {/* ===== the menu ===== */}
