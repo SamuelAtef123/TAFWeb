@@ -38,7 +38,10 @@
 .bk-cta:hover { transform: translateY(-3px) scale(1.03); background: var(--butter); box-shadow: 0 12px 30px rgba(224, 164, 88, .4); }
 .bk-hero-art { align-items: center; background: transparent; border: 0; border-radius: 0; box-shadow: none; display: flex; justify-content: center; min-height: 500px; overflow: visible; padding: 0; position: relative; }
 .bk-hero-logo-wrap { position: relative; z-index: 2; width: min(520px, 88%); transform: translate(calc(var(--mx) * -34px), calc(var(--my) * -26px)) rotate(calc(var(--mx) * -10deg)); transition: transform .18s ease-out; filter: drop-shadow(0 26px 28px rgba(0,0,0,.3)); }
-.bk-hero-logo { display: block; height: auto; max-height: 10620px; max-width: 100%; object-fit: contain; position: relative; z-index: 1;transform: scale(1.9);}
+.bk-hero-logo { display: block; height: auto; max-height: 10620px; max-width: 100%; object-fit: contain; position: relative; z-index: 1;transform: scale(1.9);
+  /* 2px white outline around Tino and the "Tino & friends" lettering (1.05px x the 1.9x scale = 2px on screen) */
+  filter: drop-shadow(1.05px 0 0 #fff) drop-shadow(-1.05px 0 0 #fff) drop-shadow(0 1.05px 0 #fff) drop-shadow(0 -1.05px 0 #fff);
+}
 .bk-hero {
   position: relative;
   isolation: isolate;
