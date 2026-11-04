@@ -856,14 +856,15 @@ body.bm-grabbing {
   flex-direction: column;
   width: min(420px, 100vw);
   background: var(--paper);
-  box-shadow: -18px 0 40px rgba(30, 14, 4, 0.35);
+  box-shadow: none; /* only when open - the closed drawer's shadow used to bleed onto the page edge */
   transform: translateX(104%);
-  transition: transform 0.45s cubic-bezier(0.25, 0.9, 0.3, 1);
+  transition: transform 0.45s cubic-bezier(0.25, 0.9, 0.3, 1), box-shadow 0.45s;
   font-family: var(--f-text);
   color: var(--espresso);
 }
 .bm-panel.open {
   transform: none;
+  box-shadow: -18px 0 40px rgba(30, 14, 4, 0.35);
 }
 .bm-panel-head {
   display: flex;

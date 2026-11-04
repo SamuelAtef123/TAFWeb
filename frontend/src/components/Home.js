@@ -177,6 +177,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import BasketMenu from './BasketMenu/BasketMenu';
 import Mascot from './Mascot/Mascot';
+import Story from './Story/Story';
 import './Home.css';
 
 // phones get the smaller hero video
@@ -318,6 +319,8 @@ function Home() {
           </div>
         </div>
 
+        <Story />
+
         <BasketMenu />
       </main>
 
@@ -332,4 +335,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default Home;

@@ -1,0 +1,204 @@
+/* ---------- "the bake / the craft / the signature" ----------
+   Giant DM Serif Display word behind a cut-out photo, on the page's flour colour.
+   --p (set from JS while scrolling) runs -1 → 1 across each panel's trip through the screen. */
+.st {
+  --st-ink: #24140c;
+  --st-fade: #cdbba8;
+  background: var(--flour, #fbf3e4);
+  overflow: hidden;
+  padding: 40px 0 20px;
+}
+.st-panel {
+  --p: 0;
+  --dir: -1;
+  position: relative;
+  min-height: min(92vh, 860px);
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 360px);
+  grid-template-rows: auto 1fr auto;
+  padding: 56px max(28px, calc((100% - 1240px) / 2));
+  isolation: isolate;
+}
+.st-panel + .st-panel {
+  border-top: 1px solid rgba(122, 90, 68, 0.14);
+}
+
+.st-label {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #9b7b62;
+  font: 500 15px var(--f-text);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.st-label span {
+  margin-right: 10px;
+  color: var(--crust, #8a4b24);
+}
+
+/* the giant word: sits behind the photo and slides sideways while scrolling */
+.st-word {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  pointer-events: none;
+}
+.st-word > span {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  margin-top: -22vh;
+  padding: 0 4vw;
+  font: 400 clamp(120px, 19.5vw, 320px) / 0.9 'DM Serif Display', var(--f-display);
+  font-size-adjust: none;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+  transform: translate3d(calc(var(--dir) * var(--p) * 14vw), 0, 0);
+  will-change: transform;
+}
+.st-ink {
+  color: var(--st-ink);
+}
+/* the last letters fade to latte, like the ink running out */
+.st-ink-fade {
+  background: linear-gradient(90deg, var(--st-ink) 0 66%, var(--st-fade) 94%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.st-exclusivity .st-word > span {
+  font-size: clamp(96px, 15vw, 250px);
+}
+/* "the craft": centred, with the glass standing in the space between the two words */
+.st-mission .st-word {
+  justify-content: center;
+}
+.st-mission .st-word > span {
+  margin-top: -2vh;
+}
+.st-gap {
+  position: relative;
+  width: 0.62em;
+  align-self: stretch;
+}
+.st-gap-img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: auto;
+  height: 2.05em;
+  transform: translate(-50%, -46%) translate3d(0, calc(var(--p) * -50px), 0) rotate(calc(var(--p) * -4deg));
+  filter: drop-shadow(0 30px 30px rgba(60, 32, 14, 0.25));
+  -webkit-user-drag: none;
+}
+.st-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* the photo floats in front of the word */
+.st-photo {
+  position: relative;
+  z-index: 1;
+  grid-column: 1;
+  grid-row: 2;
+  align-self: center;
+  justify-self: center;
+  width: min(56vw, 680px);
+  margin-top: 24vh;
+  transform: translate3d(0, calc(var(--p) * -60px), 0) rotate(calc(var(--p) * var(--dir) * -3deg));
+  will-change: transform;
+}
+.st-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 34px 34px rgba(60, 32, 14, 0.24));
+  -webkit-user-drag: none;
+}
+.st-exclusivity .st-photo {
+  width: min(62vw, 760px);
+}
+
+/* the words that explain it, bottom right like a caption */
+.st-copy {
+  position: relative;
+  z-index: 2;
+  grid-column: 2;
+  grid-row: 3;
+  align-self: end;
+  max-width: 360px;
+  color: #6d5545;
+  font-size: 18px;
+  line-height: 1.6;
+}
+.st-copy p {
+  margin: 0;
+}
+.st-copy .st-lead {
+  margin-bottom: 8px;
+  color: var(--st-ink);
+  font: italic 500 25px/1.25 var(--f-text);
+}
+.st-mission .st-copy {
+  grid-row: 3;
+}
+
+/* tablets and phones: word on top, photo, then the copy */
+@media (max-width: 820px) {
+  .st-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 44px 20px 54px;
+  }
+  .st-word {
+    position: relative;
+    inset: auto;
+    margin: 18px -20px 0;
+  }
+  .st-word > span,
+  .st-mission .st-word > span {
+    margin-top: 0;
+    font-size: 25vw;
+  }
+  .st-exclusivity .st-word > span {
+    font-size: 16vw;
+  }
+  /* less sideways travel on small screens so the words stay on the page */
+  .st-word > span {
+    transform: translate3d(calc(var(--dir) * var(--p) * 6vw), 0, 0);
+  }
+  .st-mission .st-word {
+    margin: 34vw -20px 26vw;
+  }
+  .st-photo,
+  .st-exclusivity .st-photo {
+    width: 92%;
+    margin: -11vw auto 0;
+  }
+  .st-copy {
+    max-width: none;
+    margin-top: 22px;
+    font-size: 17px;
+  }
+  .st-copy .st-lead {
+    font-size: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .st-word > span,
+  .st-photo {
+    transform: none;
+  }
+  .st-gap-img {
+    transform: translate(-50%, -46%);
+  }
+}
