@@ -82,7 +82,7 @@ body.bm-grabbing {
   width: 32px;
   height: 32px;
   border: 1px solid var(--latte);
-  border-radius: 50%;
+  border-radius: 0;
   background: rgba(255, 255, 255, 0.7);
   font-size: 13px;
   cursor: pointer;
@@ -92,8 +92,8 @@ body.bm-grabbing {
   transform: scale(1.1);
 }
 .bm-sound.on {
-  background: var(--gold);
-  border-color: var(--gold);
+  background: var(--paper);
+  border-color: var(--espresso);
 }
 .bm-hint {
   margin: 4px 0 14px;
@@ -117,26 +117,28 @@ body.bm-grabbing {
   display: grid;
   place-items: center;
   height: 44px;
-  border: 1px solid var(--roast);
-  border-radius: 999px;
+  border: 1px solid var(--espresso);
+  border-radius: 0;
   background: transparent;
-  color: var(--roast);
-  font: 700 14px var(--f-text);
+  color: var(--espresso);
+  font: 600 12px var(--f-text);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
   transition: transform 0.2s, background 0.2s, color 0.2s;
 }
 .bm-actions a {
-  background: var(--roast);
-  color: var(--butter);
+  background: var(--espresso);
+  color: var(--paper);
 }
 .bm-actions button:hover {
-  background: rgba(59, 35, 20, 0.07);
+  background: var(--espresso);
+  color: var(--paper);
 }
 .bm-actions a:hover {
-  transform: translateY(-2px);
-  background: var(--crust);
-  border-color: var(--crust);
+  background: transparent;
+  color: var(--espresso);
 }
 .bm-actions a.disabled {
   opacity: 0.4;
@@ -221,7 +223,7 @@ body.bm-grabbing {
   right: -8px;
   min-width: 26px;
   padding: 2px 6px;
-  border-radius: 999px;
+  border-radius: 0;
   background: #c2453a;
   color: #fff;
   font: 800 12px/1.3 var(--f-text);
@@ -246,9 +248,9 @@ body.bm-grabbing {
   top: 52%;
   z-index: 6;
   padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--roast);
-  color: var(--butter);
+  border-radius: 0;
+  background: var(--espresso);
+  color: var(--paper);
   font: 700 12px var(--f-text);
 }
 
@@ -276,9 +278,9 @@ body.bm-grabbing {
   top: -190%;
   transform: translateX(-50%);
   padding: 4px 12px;
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--espresso);
-  color: var(--gold);
+  color: var(--paper);
   font: 700 12px var(--f-text);
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -476,11 +478,13 @@ body.bm-grabbing {
 }
 .bm-bubble-add {
   padding: 8px 14px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--roast);
-  color: var(--butter);
-  font: 700 13px var(--f-text);
+  border: 1px solid var(--espresso);
+  border-radius: 0;
+  background: var(--espresso);
+  color: var(--paper);
+  font: 600 11px var(--f-text);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   cursor: pointer;
 }
 .bm-bubble-x {
@@ -529,9 +533,9 @@ body.bm-grabbing {
   max-width: 90%;
   transform: translateX(-50%);
   padding: 5px 13px;
-  border-radius: 999px;
-  background: var(--roast);
-  color: var(--butter);
+  border-radius: 0;
+  background: var(--espresso);
+  color: var(--paper);
   font: 700 13px var(--f-text);
   white-space: nowrap;
   overflow: hidden;
@@ -592,7 +596,7 @@ body.bm-grabbing {
   height: 46px;
   padding: 0 18px;
   border: 1px solid var(--latte);
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--paper);
 }
 .bm-search span {
@@ -609,24 +613,26 @@ body.bm-grabbing {
   font: 500 15px var(--f-text);
 }
 .bm-search:focus-within {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(224, 164, 88, 0.3);
+  border-color: var(--espresso);
+  box-shadow: none;
 }
 .bm-surprise {
   flex: none;
   height: 46px;
   padding: 0 22px;
-  border: 0;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--gold), #d4782f);
-  color: var(--espresso);
-  font: 700 14px var(--f-text);
+  border: 1px solid var(--espresso);
+  border-radius: 0;
+  background: var(--espresso);
+  color: var(--paper);
+  font: 600 12px var(--f-text);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(212, 120, 47, 0.3);
-  transition: transform 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
 .bm-surprise:hover {
-  transform: translateY(-2px) rotate(-1deg);
+  background: transparent;
+  color: var(--espresso);
 }
 .bm-menu .bk-cats {
   margin-bottom: 28px;
@@ -649,7 +655,7 @@ body.bm-grabbing {
 }
 .bm-menu .bk-cats em {
   padding: 1px 8px;
-  border-radius: 999px;
+  border-radius: 0;
   background: rgba(138, 75, 36, 0.12);
   font-size: 11px;
   font-style: normal;
@@ -797,7 +803,7 @@ body.bm-grabbing {
   height: 44px;
   font: 400 25px/1 var(--f-text);
   font-size-adjust: none;
-  box-shadow: 0 6px 14px rgba(36, 20, 12, 0.25);
+  box-shadow: 0 4px 10px rgba(36, 20, 12, 0.18);
   opacity: 0;
   transform: scale(0.8);
   transition: opacity 0.2s, transform 0.2s, background 0.25s;
@@ -888,9 +894,9 @@ body.bm-grabbing {
 .bm-x {
   width: 38px;
   height: 38px;
-  border: 1px solid var(--latte);
-  border-radius: 50%;
-  background: #fff;
+  border: 1px solid var(--espresso);
+  border-radius: 0;
+  background: transparent;
   color: var(--espresso);
   font-size: 22px;
   cursor: pointer;
@@ -960,23 +966,25 @@ body.bm-grabbing {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 3px;
-  border-radius: 999px;
-  background: var(--latte);
+  padding: 0;
+  border: 1px solid var(--espresso);
+  border-radius: 0;
+  background: transparent;
 }
 .bm-stepper button {
   width: 26px;
   height: 26px;
   border: 0;
-  border-radius: 50%;
-  background: #fff;
+  border-radius: 0;
+  background: transparent;
   color: var(--espresso);
   font-size: 16px;
   line-height: 1;
   cursor: pointer;
 }
 .bm-stepper button:hover {
-  background: var(--gold);
+  background: var(--espresso);
+  color: var(--paper);
 }
 .bm-stepper span {
   min-width: 22px;
@@ -1021,11 +1029,13 @@ body.bm-grabbing {
 }
 .bm-ghost-btn {
   padding: 0 16px;
-  border: 1px solid var(--latte);
-  border-radius: 999px;
+  border: 1px solid var(--espresso);
+  border-radius: 0;
   background: transparent;
-  color: var(--crust);
-  font: 600 13px var(--f-text);
+  color: var(--espresso);
+  font: 600 11px var(--f-text);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   cursor: pointer;
 }
 .bm-ghost-btn:disabled {
@@ -1037,17 +1047,19 @@ body.bm-grabbing {
   flex: 1;
   place-items: center;
   height: 50px;
-  border-radius: 999px;
-  background: var(--roast);
-  color: var(--butter);
-  font: 700 15px var(--f-text);
+  border: 1px solid var(--espresso);
+  border-radius: 0;
+  background: var(--espresso);
+  color: var(--paper);
+  font: 600 13px var(--f-text);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   text-decoration: none;
-  box-shadow: 0 10px 22px rgba(59, 35, 20, 0.35);
-  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
 .bm-checkout:hover {
-  transform: translateY(-2px);
-  background: var(--crust);
+  background: transparent;
+  color: var(--espresso);
 }
 .bm-checkout.disabled {
   opacity: 0.4;
@@ -1067,9 +1079,9 @@ body.bm-grabbing {
 }
 .bm-card .bk-img .bm-ribbon.bm-soldout {
   padding: 2px 10px;
-  border-radius: 999px;
-  background: var(--roast);
-  color: var(--butter);
+  border-radius: 0;
+  background: var(--espresso);
+  color: var(--paper);
 }
 
 /* product names in the basket drawer link to the detail page */
