@@ -22,28 +22,30 @@ function readCart() {
    Layers:  photo  ->  products  ->  the photo's own FRONT wall on top,
    so products sit *inside* the real basket.                                 */
 const IMG = { w: 666, h: 696 };
-const ITEM_W = 146;
-const MOUTH = { x: 315, y: 366 }; // where things drop in
-// everything below the front rim of the basket (clip for the top copy of the photo)
+const ITEM_W = 168; // the product photos have a little room around them, so a touch bigger than before
+const MOUTH = { x: 450, y: 366 }; // where things drop in (the middle of the free part of the basket)
+// everything below the top edge of the cloth's front fold (clip for the top copy of the photo);
+// measured on the photo, the same line that hides Tino's legs (see FOLD in Mascot/three/Companion.js)
 const FRONT = [
-  [0, 418], [60, 414], [100, 410], [200, 406], [330, 403], [440, 401],
-  [488, 399], [520, 399], [600, 398], [666, 396], [666, 696], [0, 696],
+  [0, 404], [90, 399], [120, 411], [150, 426], [180, 432], [210, 433], [240, 433], [270, 427],
+  [300, 420], [330, 417], [360, 414], [420, 410], [480, 403], [540, 400], [600, 394], [666, 392],
+  [666, 696], [0, 696],
 ];
 const FRONT_CLIP = `polygon(${FRONT.map(
   ([x, y]) => `${((x / IMG.w) * 100).toFixed(2)}% ${((y / IMG.h) * 100).toFixed(2)}%`
 ).join(',')})`;
 const at = (x, y) => ({ left: `${(x / IMG.w) * 100}%`, top: `${(y / IMG.h) * 100}%` });
 
-// where products pile up inside the basket, in the order they are added
+// where products pile up inside the basket, in the order they are added.
+// Tino stands in the left end of the basket (x up to ~280), so the treats fill the middle and right:
+// a front row first, then a row behind it. Up to 6 show; the rest are counted as "+N more".
 const SLOTS = [
-  { x: 252, y: 386, s: 1, r: -6 },
-  { x: 392, y: 384, s: 1, r: 5 },
-  { x: 320, y: 366, s: 1.04, r: -2 },
-  { x: 192, y: 396, s: 0.88, r: 8 },
-  { x: 458, y: 392, s: 0.88, r: -8 },
-  { x: 262, y: 332, s: 0.9, r: 4 },
-  { x: 378, y: 330, s: 0.9, r: -5 },
-  { x: 322, y: 294, s: 0.8, r: 2 },
+  { x: 400, y: 386, s: 1, r: -6 },
+  { x: 530, y: 384, s: 0.95, r: 8 },
+  { x: 465, y: 346, s: 0.9, r: -3 },
+  { x: 372, y: 350, s: 0.85, r: 10 },
+  { x: 566, y: 346, s: 0.82, r: -9 },
+  { x: 470, y: 308, s: 0.8, r: 4 },
 ];
 
 // "goes great with" suggestions, by category of what was just added
@@ -649,7 +651,7 @@ export default function BasketMenu() {
                         style={{
                           ...at(slot.x, slot.y),
                           width: `${((ITEM_W * slot.s) / IMG.w) * 100}%`,
-                          zIndex: i + 1,
+                          zIndex: slot.y, // lower in the basket = nearer = on top
                         }}
                       >
                         <div className="bm-med-in" key={`${id}:${it.quantity}`} style={{ '--r': `${slot.r}deg` }}>
