@@ -25,6 +25,10 @@ import './Mascot.css';
   The 2.5D Tino then stays in the logo. Without WebGL everything works exactly as before.
 */
 
+// Calm Tino: he greets you once (first visit), then only talks when you click him.
+// Set CHATTY to true for the old, playful Tino (jokes, acrobatics, comments on everything you do).
+const CHATTY = false;
+
 const APPEAR_AFTER = 10000; // first visit
 const APPEAR_AGAIN = 1500; // coming back to the home page in the same visit
 const AWAY_KEY = 'tino-away';
@@ -57,6 +61,7 @@ const reducedMotion = () =>
 const isNarrow = () => window.innerWidth < 640;
 const NO_3D_KEY = 'tino-2d'; // sessionStorage: set to '1' to keep only the 2.5D Tino
 const IDLE_3D = ['wiggle', 'sniff', 'spin', 'hop', 'wave'];
+const CALM_MOVES = ['wiggle', 'sniff', 'wave']; // calm Tino: small moves only, no spins or flips
 const ignoreCancel = e => {
   if (e !== 'tino-cancelled') throw e;
 };
@@ -356,31 +361,31 @@ export default function Mascot() {
           doAct('alive');
           // the 3D Tino peeks out from behind the 2.5D one, says hi, shows off, then welcomes you
           const cue = name => {
-            if (name === 'peek') speak(pick(LINES.peek), { auto: 2400 });
-            if (name === 'hello') speak(LINES.hello3d, { auto: 2200 });
-            if (name === 'watch') {
+            if (CHATTY && name === 'peek') speak(pick(LINES.peek), { auto: 2400 });
+            if (CHATTY && name === 'hello') speak(LINES.hello3d, { auto: 2200 });
+            if (CHATTY && name === 'watch') {
               speak(LINES.watch, { auto: 1600 });
               return new Promise(r => setTimeout(r, 450));
             }
-            if (name === 'welcome') speak(met ? LINES.welcomeBack : LINES.welcome);
+            if (name === 'welcome' && (CHATTY || !met)) speak(met ? LINES.welcomeBack : LINES.welcome);
             return null;
           };
-          setTimeout(() => c.intro(figRect, cue).catch(ignoreCancel), reducedMotion() ? 100 : 1100);
+          setTimeout(() => c.intro(figRect, cue, { calm: !CHATTY }).catch(ignoreCancel), reducedMotion() ? 100 : 1100);
         } else {
           setMode('dock');
           c.dropIn().catch(ignoreCancel);
-          setTimeout(() => speak(met ? LINES.welcomeBack : LINES.helloDock), reducedMotion() ? 0 : 900);
+          if (CHATTY || !met) setTimeout(() => speak(met ? LINES.welcomeBack : LINES.helloDock), reducedMotion() ? 0 : 900);
         }
         return;
       }
       if (inHero) {
         setMode('hero');
         doAct('alive');
-        setTimeout(() => speak(met ? LINES.welcomeBack : LINES.hello), reducedMotion() ? 0 : 900);
+        if (CHATTY || !met) setTimeout(() => speak(met ? LINES.welcomeBack : LINES.hello), reducedMotion() ? 0 : 900);
       } else {
         travelFrom.current = 'below';
         setMode('dock');
-        setTimeout(() => speak(met ? LINES.welcomeBack : LINES.helloDock), reducedMotion() ? 0 : 900);
+        if (CHATTY || !met) setTimeout(() => speak(met ? LINES.welcomeBack : LINES.helloDock), reducedMotion() ? 0 : 900);
       }
     }, met ? APPEAR_AGAIN : APPEAR_AFTER);
     return () => clearTimeout(t);
@@ -445,9 +450,9 @@ export default function Mascot() {
     };
   }, [has3D, figRect, goTo]);
 
-  // a line the first time each section shows up while he is in the corner
+  // a line the first time each section shows up while he is in the corner (chatty Tino only)
   useEffect(() => {
-    if (mode !== 'dock') return undefined;
+    if (mode !== 'dock' || !CHATTY) return undefined;
     const targets = [
       ['menu', document.querySelector('#menu .bm-main') || document.getElementById('menu')],
       ['footer', document.querySelector('.bk-footer')],
@@ -557,8 +562,9 @@ export default function Mascot() {
         const c = compRef.current;
         const free = !sayRef.current && Date.now() > busyUntil.current;
         if (has3D && c && free && !c.busy && (c.where === 'hero' || c.where === 'dock')) {
-          // the 3D Tino keeps the place lively: a joke and a trick
-          if (playfulLeft.current > 0 && Math.random() < 0.75) {
+          // the 3D Tino keeps the place lively: a small move (and, if chatty, a joke and a trick)
+          if (!CHATTY) c.trick(pick(CALM_MOVES)).catch(ignoreCancel);
+          else if (playfulLeft.current > 0 && Math.random() < 0.75) {
             playfulLeft.current -= 1;
             const line = pick(LINES.playful);
             speak({ text: line.text, replies: [] }, { auto: 4200 });
@@ -568,15 +574,15 @@ export default function Mascot() {
           }
         } else if (free) doAct(pick(['look', 'look', 'hop', 'wave']));
         loop();
-      }, has3D ? 11000 + Math.random() * 8000 : 7000 + Math.random() * 7000);
+      }, CHATTY ? (has3D ? 11000 + Math.random() * 8000 : 7000 + Math.random() * 7000) : 22000 + Math.random() * 14000);
     };
     loop();
     return () => clearTimeout(t);
   }, [mode, doAct, has3D, speak]);
 
-  // if the basket is still empty after a while in the menu, offer to help (once)
+  // if the basket is still empty after a while in the menu, offer to help (once; chatty Tino only)
   useEffect(() => {
-    if (mode !== 'dock') return undefined;
+    if (mode !== 'dock' || !CHATTY) return undefined;
     const t = setTimeout(() => {
       if (said.current.has('nudge') || readCart().length) return;
       if (Date.now() < busyUntil.current || sayRef.current) return;
@@ -593,6 +599,7 @@ export default function Mascot() {
       const before = cartSnap.current;
       const now = snapshot();
       cartSnap.current = now;
+      if (!CHATTY) return; // calm Tino doesn't comment on the basket
       let added = null;
       let removed = false;
       now.forEach((q, name) => {
@@ -618,6 +625,7 @@ export default function Mascot() {
       }
     };
     const onClick = e => {
+      if (!CHATTY) return; // calm Tino doesn't comment on buttons and chips
       const t = e.target;
       if (!(t instanceof Element)) return;
       if (t.closest('.bk-cta')) {
@@ -652,7 +660,7 @@ export default function Mascot() {
       if (r.bottom < 0 || r.top > window.innerHeight) return;
       accept();
       busyUntil.current = 0;
-      speak({ text: LINES.carrying(product.name), replies: [] }, { auto: 4000 });
+      if (CHATTY) speak({ text: LINES.carrying(product.name), replies: [] }, { auto: 4000 });
       c.deliver(el, product.image, mouth, { onDrop: drop }).catch(ignoreCancel);
     };
     window.addEventListener('cart:updated', onCart);

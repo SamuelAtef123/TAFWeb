@@ -998,6 +998,7 @@ body.bm-grabbing {
 .bm-line-total {
   min-width: 52px;
   font-size: 15px;
+  white-space: nowrap;
   text-align: right;
 }
 .bm-panel-foot {

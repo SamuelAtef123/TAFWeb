@@ -5,9 +5,8 @@
   font-family: var(--f-text); color: var(--espresso);
   background: var(--flour); overflow-x: hidden; overflow-x: clip;
 }
-.bk h1, .bk h2, .bk h3, .bk-brand { font-family: var(--f-display); font-weight: 400; font-size-adjust: none; }
-/* Didot has no italic: italics are Garamond's */
-.bk em, .bk i { font-family: var(--f-text); font-style: italic; }
+.bk h1, .bk h2, .bk h3, .bk-brand { font-family: var(--f-display); font-weight: 500; font-size-adjust: none; }
+.bk em, .bk i { font-style: italic; }
 
 /* header */
 .bk-header { position: fixed; inset: 0 0 auto 0; z-index: 20; display: flex; justify-content: space-between; align-items: center; padding: 22px max(28px, calc((100% - 1160px) / 2)); transition: background .4s, padding .4s, box-shadow .4s; }

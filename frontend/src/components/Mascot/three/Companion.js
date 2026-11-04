@@ -596,16 +596,16 @@ export default class Companion {
   /* =================== scenes =================== */
 
   // hides behind the 2.5D Tino, peeks out, pops out over his shoulder and shows off
-  async intro(getRect, cue = () => {}) {
+  async intro(getRect, cue = () => {}, { calm = false } = {}) {
     this.busy = true; // little tricks wait until the show is over
     try {
-      await this.introShow(getRect, cue);
+      await this.introShow(getRect, cue, calm);
     } finally {
       this.busy = false;
     }
   }
 
-  async introShow(getRect, cue) {
+  async introShow(getRect, cue, calm = false) {
     const step = this.newRun();
     this.where = 'hero';
     // wait (briefly) until the logo Tino is on the page
@@ -645,6 +645,11 @@ export default class Companion {
     this.follow = () => this.besideSpot(getRect);
     await step(this.play('land', 260));
     await step(Promise.all([this.play('wave', 1300), cue('hello')]));
+    if (calm) {
+      // calm Tino: no acrobatics, just a wave and hello
+      await step(cue('welcome'));
+      return;
+    }
     await step(cue('watch'));
     await step(this.play('backflip'));
     await step(this.play('land', 220));

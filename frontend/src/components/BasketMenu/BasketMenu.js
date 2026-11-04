@@ -761,7 +761,7 @@ export default function BasketMenu() {
       <div className="bk-info">
         <h3>{p.name.toLowerCase()}</h3>
         <p className="bm-desc">{p.description}</p>
-        <p className="bk-price">{fmt(p.price)} egp</p>
+        <p className="bk-price">{fmt(p.price)} EGP</p>
       </div>
       <button
         className="bk-add"
@@ -1022,7 +1022,7 @@ export default function BasketMenu() {
                       +
                     </button>
                   </div>
-                  <b className="bm-line-total">{fmt(it.price * it.quantity)}</b>
+                  <b className="bm-line-total">{fmt(it.price * it.quantity)} EGP</b>
                 </li>
               );
             })}
