@@ -18,10 +18,10 @@
     "price": 140,
     "currency": "EGP",
     "description": "Rich almond-filled croissant topped with toasted almonds and a light dusting of powdered sugar.",
-    "image": "/images/topview/VIE002.webp",
+    "image": "/images/products/VIE002.webp",
     "featured": true,
     "available": true,
-    "hidden": false
+    "hidden": true
   },
   {
     "code": "VIE003",
@@ -366,10 +366,10 @@
     "price": 65,
     "currency": "EGP",
     "description": "Light and airy Italian ciabatta bread ideal for sandwiches or dipping.",
-    "image": "/images/topview/BRD002.webp",
+    "image": "/images/products/BRD002.webp",
     "featured": false,
     "available": true,
-    "hidden": false
+    "hidden": true
   },
   {
     "code": "BRD003",

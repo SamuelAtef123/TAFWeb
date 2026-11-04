@@ -103,8 +103,8 @@ const rows = [
 // Items with a matching top-view photo (public/images/topview). Everything else stays in the
 // data but is hidden from the menu - not deleted, so it can come back later.
 export const TOPVIEW = new Set([
-  'VIE001', 'VIE006', 'VIE007', 'COO001', 'MUF001', 'BRD001', 'VIE002', 'VIE011',
-  'BRD002', 'BRD003', 'COL001', 'COL011', 'HOT001', 'HOT002', 'HOT003', 'HOT004',
+  'VIE001', 'VIE006', 'VIE007', 'COO001', 'MUF001', 'BRD001', 'VIE011',
+  'BRD003', 'COL001', 'COL011', 'HOT001', 'HOT002', 'HOT003', 'HOT004',
   'HOT005', 'HOT006', 'HOT007', 'HOT008', 'HOT009', 'HOT010', 'HOT011', 'HOT013',
   'HOT014', 'HOT015', 'HOT016', 'IND007', 'SAL001', 'SAL003', 'SAN002', 'SAN005',
   'SMO002',
