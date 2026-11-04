@@ -4,6 +4,7 @@
   "private": true,
   "proxy": "http://localhost:5000",
   "dependencies": {
+    "@fontsource/cormorant-garamond": "^5.3.0",
     "@fontsource/dm-serif-display": "^5.3.0",
     "@fontsource/eb-garamond": "^5.3.0",
     "@fontsource/gfs-didot": "^5.3.0",

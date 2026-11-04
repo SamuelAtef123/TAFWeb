@@ -184,7 +184,8 @@ import './Home.css';
 const SMALL_SCREEN = typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
 
 const MARQUEE = ['Croissants', 'Sourdough', 'Pain au chocolat', 'Brioche', 'Baguette', 'Café crème', 'Éclairs', 'Canelés'];
-const HEADLINE = ['Baked', 'at', 'dawn,', 'still', 'warm', 'when', 'you', 'arrive.'];
+// words of the hero headline; the gold italic ones are marked
+const HEADLINE = [['Good'], ['mornings'], ['start', true], ['here.', true]];
 // const FLOUR = Array.from({ length: 28 }, (_, i) => ({
 //   left: (i * 37) % 100,
 //   size: 2 + (i % 4),
@@ -294,17 +295,17 @@ function Home() {
           </div>
 
           <div className="bk-hero-copy">
-            <p className="bk-kicker">Fresh from the oven, every morning</p>
-            <h1 aria-label={HEADLINE.join(' ')}>
-              {HEADLINE.map((w, i) => (
-                <span className="bk-word" key={i} aria-hidden="true">
-                  <span style={{ animationDelay: `${0.9 + i * 0.09}s` }}>{w}&nbsp;</span>
+            <p className="bk-kicker">Boulangerie · Pâtisserie · Café</p>
+            <h1 aria-label={HEADLINE.map(([w]) => w).join(' ')}>
+              {HEADLINE.map(([w, gold], i) => (
+                <span className={gold ? 'bk-word bk-word-gold' : 'bk-word'} key={i} aria-hidden="true">
+                  <span style={{ animationDelay: `${0.9 + i * 0.12}s` }}>{w}&nbsp;</span>
                 </span>
               ))}
             </h1>
             <p className="bk-lede">
-              Hand-laminated croissants, slow-fermented bread and good things to share.
-              Come in while the butter is still singing.
+              Butter-rich croissants, slow sourdough and coffee pulled to order — baked by friends,
+              for friends, every single day.
             </p>
             <a className="bk-cta" href="#menu">See today&apos;s bake</a>
           </div>

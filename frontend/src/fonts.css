@@ -2,8 +2,12 @@
   Tino & Friends type: two French faces, served with the site (no Google Fonts request).
   - GFS Didot: the Didot of Paris shop windows, for headings and the name.
   - EB Garamond: Claude Garamond's book face, for everything else; its italic names the treats.
+  - Cormorant Garamond: a light, high-contrast Garamond for the big hero headline.
+  - DM Serif Display: the giant words of the "the bake / the craft / the signature" section.
 */
 @import '@fontsource/gfs-didot/400.css';
+@import '@fontsource/cormorant-garamond/500.css';
+@import '@fontsource/cormorant-garamond/500-italic.css';
 @import '@fontsource/eb-garamond/400.css';
 @import '@fontsource/eb-garamond/500.css';
 @import '@fontsource/eb-garamond/600.css';
@@ -14,6 +18,7 @@
 :root {
   --f-display: 'GFS Didot', Didot, 'Bodoni 72', 'Libre Bodoni', Georgia, serif;
   --f-text: 'EB Garamond', Garamond, 'Times New Roman', serif;
+  --f-hero: 'Cormorant Garamond', 'EB Garamond', Garamond, serif;
 }
 
 html {
