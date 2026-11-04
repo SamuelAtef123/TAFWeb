@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useParams } from 'react-router-dom';
-import { MENU } from '../data/menu';
+import { ALL_MENU as MENU } from '../data/menu';
 import { egp, fromApi, readCart, writeCart, toCartItem } from '../utils/shop';
 
 function ProductDetails() {

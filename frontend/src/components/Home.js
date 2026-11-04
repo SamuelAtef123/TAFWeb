@@ -176,10 +176,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import BasketMenu from './BasketMenu/BasketMenu';
+import Mascot from './Mascot/Mascot';
+import Story from './Story/Story';
 import './Home.css';
 
+// phones get the smaller hero video
+const SMALL_SCREEN = typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+
 const MARQUEE = ['Croissants', 'Sourdough', 'Pain au chocolat', 'Brioche', 'Baguette', 'Café crème', 'Éclairs', 'Canelés'];
-const HEADLINE = ['Baked', 'at', 'dawn,', 'still', 'warm', 'when', 'you', 'arrive.'];
+// words of the hero headline; the gold italic ones are marked
+const HEADLINE = [['Good'], ['mornings'], ['start', true], ['here.', true]];
 // const FLOUR = Array.from({ length: 28 }, (_, i) => ({
 //   left: (i * 37) % 100,
 //   size: 2 + (i % 4),
@@ -236,8 +242,10 @@ function Home() {
     <div className="bk">
       <header className={scrolled ? 'bk-header solid' : 'bk-header'}>
         <Link className="bk-brand" to="/">
-          <span className="bk-mark">T&amp;F</span>
-          <span>Tino &amp; Friends <em>Bakery</em></span>
+          <img className="bk-mark" src="/tino-badge.png" alt="" width="46" height="46" />
+          <span className="bk-brand-name" aria-label="Tino & Friends Bakery">
+            Tino &amp; friends <em>bakery</em>
+          </span>
         </Link>
         <nav className="bk-nav" aria-label="Main navigation">
           <a href="#menu">Menu</a>
@@ -257,8 +265,20 @@ function Home() {
             ))} */}
           </div>
 
-          <video className="bk-video" autoPlay muted loop playsInline aria-hidden="true">
-            <source src="/backgroundloop.mp4" type="video/mp4" />
+          {/* 1080p for big screens, 720p for phones; WebM first (smaller), MP4 for older browsers.
+              The poster (first frame) shows instantly while the video loads. */}
+          <video
+            className="bk-video"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            poster="/backgroundloop-poster.webp"
+            aria-hidden="true"
+          >
+            <source src={`/backgroundloop${SMALL_SCREEN ? '-720' : ''}.webm`} type="video/webm" />
+            <source src={`/backgroundloop${SMALL_SCREEN ? '-720' : ''}.mp4`} type="video/mp4" />
           </video>
 
           <div className="bk-hero-stage">
@@ -267,7 +287,7 @@ function Home() {
             </div>
             <div className="bk-arch" aria-hidden="true" /> */}
 
-            <div className="bk-hero-logo-wrap" aria-label="Tino & Friends bakery mascot" role="img">
+            <div className="bk-hero-logo-wrap">
               <img
                 className="bk-hero-logo"
                 src="/Logo3.png"
@@ -277,17 +297,17 @@ function Home() {
           </div>
 
           <div className="bk-hero-copy">
-            <p className="bk-kicker">Fresh from the oven, every morning</p>
-            <h1 aria-label={HEADLINE.join(' ')}>
-              {HEADLINE.map((w, i) => (
-                <span className="bk-word" key={i} aria-hidden="true">
-                  <span style={{ animationDelay: `${0.9 + i * 0.09}s` }}>{w}&nbsp;</span>
+            <p className="bk-kicker">Boulangerie · Pâtisserie · Café</p>
+            <h1 aria-label={HEADLINE.map(([w]) => w).join(' ')}>
+              {HEADLINE.map(([w, gold], i) => (
+                <span className={gold ? 'bk-word bk-word-gold' : 'bk-word'} key={i} aria-hidden="true">
+                  <span style={{ animationDelay: `${0.9 + i * 0.12}s` }}>{w}&nbsp;</span>
                 </span>
               ))}
             </h1>
             <p className="bk-lede">
-              Hand-laminated croissants, slow-fermented bread and good things to share.
-              Come in while the butter is still singing.
+              Butter-rich croissants, slow sourdough and coffee pulled to order — baked by friends,
+              for friends, every single day.
             </p>
             <a className="bk-cta" href="#menu">See today&apos;s bake</a>
           </div>
@@ -302,8 +322,12 @@ function Home() {
           </div>
         </div>
 
+        <Story />
+
         <BasketMenu />
       </main>
+
+      <Mascot />
 
       <footer className="bk-footer">
         <span>Tino &amp; Friends Bakery</span>

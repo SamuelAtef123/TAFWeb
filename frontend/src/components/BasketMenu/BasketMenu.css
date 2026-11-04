@@ -70,10 +70,9 @@ body.bm-grabbing {
 }
 .bm-eyebrow {
   margin: 0;
-  font: 700 11px 'DM Sans', sans-serif;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--crust);
+  font: 400 21px var(--f-display);
+  font-size-adjust: none;
+  color: var(--roast);
 }
 .bm-sound {
   position: absolute;
@@ -98,7 +97,7 @@ body.bm-grabbing {
 }
 .bm-hint {
   margin: 4px 0 14px;
-  font: 500 13px 'DM Sans', sans-serif;
+  font: 500 13px var(--f-text);
   color: #8a6a4e;
   text-align: center;
   transition: opacity 0.5s;
@@ -122,7 +121,7 @@ body.bm-grabbing {
   border-radius: 999px;
   background: transparent;
   color: var(--roast);
-  font: 700 14px 'DM Sans', sans-serif;
+  font: 700 14px var(--f-text);
   text-decoration: none;
   cursor: pointer;
   transition: transform 0.2s, background 0.2s, color 0.2s;
@@ -225,7 +224,7 @@ body.bm-grabbing {
   border-radius: 999px;
   background: #c2453a;
   color: #fff;
-  font: 800 12px/1.3 'DM Sans', sans-serif;
+  font: 800 12px/1.3 var(--f-text);
   text-align: center;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
@@ -250,7 +249,7 @@ body.bm-grabbing {
   border-radius: 999px;
   background: var(--roast);
   color: var(--butter);
-  font: 700 12px 'DM Sans', sans-serif;
+  font: 700 12px var(--f-text);
 }
 
 /* the drop target */
@@ -280,7 +279,7 @@ body.bm-grabbing {
   border-radius: 999px;
   background: var(--espresso);
   color: var(--gold);
-  font: 700 12px 'DM Sans', sans-serif;
+  font: 700 12px var(--f-text);
   letter-spacing: 0.04em;
   white-space: nowrap;
   opacity: 0;
@@ -371,7 +370,7 @@ body.bm-grabbing {
   border-radius: 6px 6px 12px 12px;
   background: linear-gradient(#fffdf6, #f4e4bf);
   color: var(--espresso);
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--f-text);
   cursor: pointer;
   transform-origin: 50% -26px;
   box-shadow: 0 8px 14px rgba(59, 35, 20, 0.22);
@@ -405,10 +404,10 @@ body.bm-grabbing {
   color: var(--crust);
 }
 .bm-tag-total {
-  font: 600 19px/1.1 'Fraunces', Georgia, serif;
+  font: 600 19px/1.1 var(--f-display);
 }
 .bm-tag-total small {
-  font: 700 9px 'DM Sans', sans-serif;
+  font: 700 9px var(--f-text);
   color: var(--crust);
 }
 @keyframes bm-idle {
@@ -441,7 +440,7 @@ body.bm-grabbing {
   border-radius: 18px;
   background: #fff;
   box-shadow: 0 14px 30px rgba(59, 35, 20, 0.28);
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--f-text);
   animation: bm-in 0.5s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
 .bm-bubble-img {
@@ -467,7 +466,7 @@ body.bm-grabbing {
 }
 .bm-bubble strong {
   overflow: hidden;
-  font: 400 15px 'Fraunces', Georgia, serif;
+  font: 400 15px var(--f-display);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -481,7 +480,7 @@ body.bm-grabbing {
   border-radius: 999px;
   background: var(--roast);
   color: var(--butter);
-  font: 700 13px 'DM Sans', sans-serif;
+  font: 700 13px var(--f-text);
   cursor: pointer;
 }
 .bm-bubble-x {
@@ -533,7 +532,7 @@ body.bm-grabbing {
   border-radius: 999px;
   background: var(--roast);
   color: var(--butter);
-  font: 700 13px 'DM Sans', sans-serif;
+  font: 700 13px var(--f-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -607,7 +606,7 @@ body.bm-grabbing {
   outline: 0;
   background: none;
   color: var(--espresso);
-  font: 500 15px 'DM Sans', sans-serif;
+  font: 500 15px var(--f-text);
 }
 .bm-search:focus-within {
   border-color: var(--gold);
@@ -621,7 +620,7 @@ body.bm-grabbing {
   border-radius: 999px;
   background: linear-gradient(135deg, var(--gold), #d4782f);
   color: var(--espresso);
-  font: 700 14px 'DM Sans', sans-serif;
+  font: 700 14px var(--f-text);
   cursor: pointer;
   box-shadow: 0 8px 18px rgba(212, 120, 47, 0.3);
   transition: transform 0.2s;
@@ -659,89 +658,177 @@ body.bm-grabbing {
   background: rgba(255, 255, 255, 0.16);
 }
 
-.bm-grid.bk-grid {
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 22px;
+/* ---------- the menu: category sections of top-view photos ----------
+   Every photo is the same top-down shot on a transparent background with one soft
+   shadow, so the treats float straight on the page. Section title on the left,
+   lowercase names, a short grey description and an italic price. */
+.bm-sections {
+  container-type: inline-size;
 }
-.bm-card {
+.bm-sec {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px 30px;
+  padding: 34px 0 46px;
+  border-top: 1px solid rgba(122, 90, 68, 0.16);
+}
+.bm-sec:first-child {
+  border-top: 0;
+  padding-top: 10px;
+}
+.bm-sec-title {
+  align-self: start;
+  margin: 0;
+  color: #9b7b62;
+  font: 400 clamp(30px, 3.6vw, 44px) / 1.05 var(--f-display);
+  font-size-adjust: none;
+  letter-spacing: -0.01em;
+}
+/* lots of room: the title moves into its own column on the left, like a menu card */
+@container (min-width: 1000px) {
+  .bm-sec {
+    grid-template-columns: 200px 1fr;
+  }
+}
+@container (max-width: 640px) {
+  .bm-sec {
+    padding: 26px 0 34px;
+  }
+}
+.bm-grid.bk-grid {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 36px 30px;
+}
+.bm-card.bk-card {
+  display: flex;
+  flex-direction: column;
+  container-type: inline-size;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+  text-align: left;
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   touch-action: pan-y;
   outline: 0;
-  padding-bottom: 58px;
   transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
-  transition: transform 0.2s ease-out, box-shadow 0.35s, opacity 0.2s;
+  transition: transform 0.2s ease-out, opacity 0.2s;
   animation: bm-card-in 0.5s cubic-bezier(0.25, 0.9, 0.35, 1) both;
-  animation-delay: calc(var(--i, 0) * 30ms);
+  animation-delay: calc(var(--i, 0) * 40ms);
 }
-.bm-card:hover {
-  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-8px);
+.bm-card.bk-card:hover {
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  box-shadow: none;
 }
-.bm-card:focus-visible {
-  box-shadow: 0 0 0 3px var(--gold), 0 24px 40px rgba(59, 35, 20, 0.18);
+.bm-card:focus-visible .bk-img {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 12px;
 }
 .bm-card.is-dragging {
   opacity: 0.4;
   transform: scale(0.96);
 }
 @keyframes bm-card-in {
-  0% { opacity: 0; transform: translateY(22px) scale(0.95); }
+  0% { opacity: 0; transform: translateY(18px); }
   100% { opacity: 1; }
 }
+/* the photo: square, no frame - the cutout floats on the page */
 .bm-card .bk-img {
   position: relative;
-  height: 180px;
+  height: auto;
+  aspect-ratio: 1;
+  background: none;
+  overflow: visible;
+}
+.bm-card .bk-img img {
+  object-fit: contain;
+  transition: transform 0.5s cubic-bezier(0.25, 0.9, 0.35, 1);
+}
+.bm-card.bk-card:hover .bk-img img {
+  transform: scale(1.05) rotate(-2deg);
 }
 .bm-card .bk-img img,
 .bm-card .bk-img .bm-fallback {
   -webkit-user-drag: none;
 }
 .bm-card .bk-info {
-  padding: 18px 18px 8px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px 6% 0;
 }
 .bm-card .bk-info h3 {
-  font-size: 19px;
-  line-height: 1.2;
+  margin: 0 0 6px;
+  color: var(--espresso);
+  font: 600 21px/1.2 var(--f-text);
+  font-size-adjust: none;
+  text-wrap: balance;
 }
 .bm-desc {
   display: -webkit-box;
+  max-width: 30ch;
   margin: 0 0 10px;
   overflow: hidden;
-  color: #7a5a44;
-  font-size: 13px;
-  line-height: 1.5;
-  -webkit-line-clamp: 2;
+  color: #8c7a6c;
+  text-transform: lowercase;
+  font-size: 15.5px;
+  line-height: 1.45;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 .bm-card .bk-price {
-  position: absolute;
-  left: 18px;
-  bottom: 22px;
-  font-size: 17px;
+  position: static;
+  margin-top: auto;
+  color: var(--crust);
+  font: italic 400 18px var(--f-text);
+  font-variant-numeric: oldstyle-nums;
 }
+/* the + sits on the photo's bottom-right corner */
 .bm-card .bk-add {
-  right: 14px;
-  bottom: 16px;
+  top: calc(100cqw - 54px);
+  right: 4px;
+  bottom: auto;
+  width: 44px;
+  height: 44px;
+  font: 400 25px/1 var(--f-text);
+  font-size-adjust: none;
+  box-shadow: 0 6px 14px rgba(36, 20, 12, 0.25);
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.2s, transform 0.2s, background 0.25s;
+}
+.bm-card:hover .bk-add,
+.bm-card:focus-within .bk-add,
+.bm-card .bk-add.pop {
+  opacity: 1;
+  transform: none;
+}
+@media (hover: none) {
+  .bm-card .bk-add {
+    opacity: 1;
+    transform: none;
+  }
 }
 .bm-card .bk-img .bm-ribbon {
   position: absolute;
-  left: 12px;
-  top: 12px;
-  padding: 4px 11px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #d9962f, #f6cf6a, #d9962f);
-  background-size: 200% 100%;
-  color: #4a2c0a;
-  font: 800 10px/1.2 'DM Sans', sans-serif;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
-  animation: bm-shimmer 3.2s linear infinite;
+  left: 6%;
+  top: 2%;
+  padding: 0;
+  background: none;
+  color: var(--crust);
+  font: italic 400 15px/1.2 var(--f-text);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
-@keyframes bm-shimmer {
-  to { background-position: -200% 0; }
+.bm-card .bk-img .bm-ribbon:not(.bm-soldout)::before {
+  content: '✦ ';
+  font-style: normal;
+  font-size: 11px;
 }
 
 /* ---------- drawer ---------- */
@@ -769,14 +856,15 @@ body.bm-grabbing {
   flex-direction: column;
   width: min(420px, 100vw);
   background: var(--paper);
-  box-shadow: -18px 0 40px rgba(30, 14, 4, 0.35);
+  box-shadow: none; /* only when open - the closed drawer's shadow used to bleed onto the page edge */
   transform: translateX(104%);
-  transition: transform 0.45s cubic-bezier(0.25, 0.9, 0.3, 1);
-  font-family: 'DM Sans', sans-serif;
+  transition: transform 0.45s cubic-bezier(0.25, 0.9, 0.3, 1), box-shadow 0.45s;
+  font-family: var(--f-text);
   color: var(--espresso);
 }
 .bm-panel.open {
   transform: none;
+  box-shadow: -18px 0 40px rgba(30, 14, 4, 0.35);
 }
 .bm-panel-head {
   display: flex;
@@ -795,7 +883,7 @@ body.bm-grabbing {
 }
 .bm-panel-head h2 {
   margin: 2px 0 0;
-  font: italic 400 28px 'Fraunces', Georgia, serif;
+  font: italic 500 28px var(--f-text);
 }
 .bm-x {
   width: 38px;
@@ -820,7 +908,7 @@ body.bm-grabbing {
 }
 .bm-panel-empty p {
   margin: 0;
-  font: italic 400 22px 'Fraunces', Georgia, serif;
+  font: italic 500 22px var(--f-text);
 }
 .bm-panel-empty small {
   color: var(--crust);
@@ -862,7 +950,7 @@ body.bm-grabbing {
   line-height: 1.25;
 }
 .bm-line-info strong {
-  font: 400 16px 'Fraunces', Georgia, serif;
+  font: 400 16px var(--f-display);
 }
 .bm-line-info span {
   font-size: 12px;
@@ -920,11 +1008,11 @@ body.bm-grabbing {
   color: var(--crust);
 }
 .bm-sum strong {
-  font: 400 32px 'Fraunces', Georgia, serif;
+  font: 400 32px var(--f-display);
   color: var(--roast);
 }
 .bm-sum small {
-  font: 700 12px 'DM Sans', sans-serif;
+  font: 700 12px var(--f-text);
   color: var(--crust);
 }
 .bm-panel-actions {
@@ -937,7 +1025,7 @@ body.bm-grabbing {
   border-radius: 999px;
   background: transparent;
   color: var(--crust);
-  font: 600 13px 'DM Sans', sans-serif;
+  font: 600 13px var(--f-text);
   cursor: pointer;
 }
 .bm-ghost-btn:disabled {
@@ -952,7 +1040,7 @@ body.bm-grabbing {
   border-radius: 999px;
   background: var(--roast);
   color: var(--butter);
-  font: 700 15px 'DM Sans', sans-serif;
+  font: 700 15px var(--f-text);
   text-decoration: none;
   box-shadow: 0 10px 22px rgba(59, 35, 20, 0.35);
   transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
@@ -978,9 +1066,10 @@ body.bm-grabbing {
   pointer-events: none;
 }
 .bm-card .bk-img .bm-ribbon.bm-soldout {
+  padding: 2px 10px;
+  border-radius: 999px;
   background: var(--roast);
   color: var(--butter);
-  animation: none;
 }
 
 /* product names in the basket drawer link to the detail page */
@@ -1067,11 +1156,33 @@ body.bm-grabbing {
     padding: 0 14px;
     font-size: 13px;
   }
+  /* phones: two treats per row */
   .bm-grid.bk-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 30px 14px;
   }
-  .bm-card .bk-img {
-    height: 190px;
+  .bm-card .bk-add {
+    top: calc(100cqw - 44px);
+    right: 0;
+    width: 38px;
+    height: 38px;
+    font-size: 21px;
+  }
+  .bm-card .bk-info {
+    padding: 6px 2px 0;
+  }
+  .bm-card .bk-info h3 {
+    font-size: 18px;
+  }
+  .bm-desc {
+    font-size: 14px;
+    -webkit-line-clamp: 2;
+  }
+  .bm-card .bk-price {
+    font-size: 16px;
+  }
+  .bm-card .bk-img .bm-ribbon {
+    font-size: 13px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

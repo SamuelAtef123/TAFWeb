@@ -100,7 +100,17 @@ const rows = [
 ['NEW004','Cinnamon Milkshake','New Drinks',205,'Creamy cinnamon milkshake with warm spice notes and smooth ice-cream texture.',1],
 ];
 
-export const MENU = rows.map(([id, name, category, price, description, featured]) => ({
+// Items with a matching top-view photo (public/images/topview). Everything else stays in the
+// data but is hidden from the menu - not deleted, so it can come back later.
+export const TOPVIEW = new Set([
+  'VIE001', 'VIE006', 'VIE007', 'COO001', 'MUF001', 'BRD001', 'VIE011',
+  'BRD003', 'COL001', 'COL011', 'HOT001', 'HOT002', 'HOT003', 'HOT004',
+  'HOT005', 'HOT006', 'HOT007', 'HOT008', 'HOT009', 'HOT010', 'HOT011', 'HOT013',
+  'HOT014', 'HOT015', 'HOT016', 'IND007', 'SAL001', 'SAL003', 'SAN002', 'SAN005',
+  'SMO002',
+]);
+
+export const ALL_MENU = rows.map(([id, name, category, price, description, featured]) => ({
   id,
   _id: id, // keeps the existing /cart page working (it keys items by _id)
   code: id, // the menu code - the backend looks products up by this
@@ -109,10 +119,14 @@ export const MENU = rows.map(([id, name, category, price, description, featured]
   price,
   currency: 'EGP',
   description,
-  image: `/images/products/${id}.webp`,
+  image: TOPVIEW.has(id) ? `/images/topview/${id}.webp` : `/images/products/${id}.webp`,
   available: true,
+  hidden: !TOPVIEW.has(id),
   featured: !!featured,
 }));
+
+// What the public menu shows
+export const MENU = ALL_MENU.filter(p => !p.hidden);
 
 export const CATEGORIES = [...new Set(MENU.map(p => p.category))];
 

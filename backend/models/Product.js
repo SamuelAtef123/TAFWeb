@@ -31,7 +31,9 @@ const productSchema = new mongoose.Schema({
   description: { type: String },
   image: { type: String },
   featured: { type: Boolean, default: false },
-  available: { type: Boolean, default: true }
+  available: { type: Boolean, default: true },
+  // Hidden products stay in the database but are left off the public menu
+  hidden: { type: Boolean, default: false }
 });
 
 const Product = mongoose.model('Product', productSchema);

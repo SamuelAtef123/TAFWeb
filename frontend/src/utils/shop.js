@@ -20,6 +20,7 @@ export const fromApi = p => ({
   image: p.image || (p.code ? `/images/products/${p.code}.webp` : ''),
   available: p.available !== false,
   featured: !!p.featured,
+  hidden: !!p.hidden,
 });
 
 // The cart line we store in localStorage.

@@ -1,0 +1,197 @@
+/* ---------- "the bake / the craft / the signature" ----------
+   Giant DM Serif Display word behind a cut-out photo, on the page's flour colour.
+   The photo overlaps only the bottom of the letters (sized from the word, --ws, not the
+   screen height), so the word stays readable on any screen.
+   --p (set from JS while scrolling) runs -1 → 1 across each panel's trip through the screen. */
+.st {
+  --st-ink: #24140c;
+  --st-fade: #cdbba8;
+  background: var(--flour, #fbf3e4);
+  overflow: hidden;
+  padding: 40px 0 20px;
+}
+.st-panel {
+  --p: 0;
+  --dir: -1;
+  --ws: clamp(120px, 17.5vw, 300px); /* size of the big word */
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+  grid-template-areas:
+    'label label'
+    'word  word'
+    'photo copy';
+  column-gap: 40px;
+  padding: 56px max(28px, calc((100% - 1240px) / 2)) 72px;
+  isolation: isolate;
+}
+.st-panel + .st-panel {
+  border-top: 1px solid rgba(122, 90, 68, 0.14);
+}
+.st-exclusivity {
+  --ws: clamp(96px, 14.5vw, 250px);
+}
+
+.st-label {
+  grid-area: label;
+  margin: 0;
+  color: #9b7b62;
+  font: 500 15px var(--f-text);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.st-label span {
+  margin-right: 10px;
+  color: var(--crust, #8a4b24);
+}
+
+/* the giant word: behind the photo, slides sideways while scrolling
+   (.st .st-word beats the site's general ".bk h2" heading rule) */
+.st .st-word {
+  grid-area: word;
+  position: relative;
+  z-index: 0;
+  display: flex;
+  margin: 0.12em 0 0;
+  font: 400 var(--ws) / 1 'DM Serif Display', var(--f-display);
+  font-size-adjust: none;
+  pointer-events: none;
+}
+.st-word > span {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  padding: 0 0.02em;
+  letter-spacing: -0.04em;
+  word-spacing: 0.1em;
+  white-space: nowrap;
+  transform: translate3d(calc(var(--dir) * var(--p) * 12vw), 0, 0);
+  will-change: transform;
+}
+.st-ink {
+  color: var(--st-ink);
+}
+/* the last letters fade to latte, like the ink running out */
+.st-ink-fade {
+  background: linear-gradient(90deg, var(--st-ink) 0 66%, var(--st-fade) 94%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* the photo floats in front, overlapping just the bottom of the letters */
+.st-photo {
+  grid-area: photo;
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  width: min(58vw, 740px);
+  margin-top: calc(var(--ws) * -0.34);
+  transform: translate3d(0, calc(var(--p) * -50px), 0) rotate(calc(var(--p) * var(--dir) * -3deg));
+  will-change: transform;
+}
+.st-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 34px 34px rgba(60, 32, 14, 0.24));
+  -webkit-user-drag: none;
+}
+.st-exclusivity .st-photo {
+  width: min(42vw, 540px);
+  margin-top: calc(var(--ws) * -0.3);
+}
+
+/* "the craft": centred, with the glass standing in the space between the two words */
+.st-mission .st-word {
+  justify-content: center;
+  margin: 0.62em 0 0.55em;
+}
+.st-gap {
+  position: relative;
+  width: 0.62em;
+  align-self: stretch;
+}
+.st-gap-img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: auto;
+  height: 2em;
+  transform: translate(-50%, -46%) translate3d(0, calc(var(--p) * -50px), 0) rotate(calc(var(--p) * -4deg));
+  filter: drop-shadow(0 30px 30px rgba(60, 32, 14, 0.25));
+  -webkit-user-drag: none;
+}
+.st-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* the words that explain it, bottom right like a caption */
+.st-copy {
+  grid-area: copy;
+  position: relative;
+  z-index: 2;
+  align-self: end;
+  max-width: 360px;
+  color: #6d5545;
+  font-size: 18px;
+  line-height: 1.6;
+}
+.st-mission .st-copy {
+  grid-area: photo / copy;
+}
+.st-copy p {
+  margin: 0;
+}
+.st-copy .st-lead {
+  margin-bottom: 8px;
+  color: var(--st-ink);
+  font: italic 500 25px/1.25 var(--f-text);
+}
+
+/* tablets and phones: label, word, photo, copy stacked */
+@media (max-width: 820px) {
+  .st-panel {
+    --ws: 24vw;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'label' 'word' 'photo' 'copy';
+    padding: 44px 20px 54px;
+  }
+  .st-exclusivity {
+    --ws: 15.5vw;
+  }
+  .st-word > span {
+    transform: translate3d(calc(var(--dir) * var(--p) * 5vw), 0, 0);
+  }
+  .st-photo {
+    width: 94%;
+  }
+  .st-exclusivity .st-photo {
+    width: 74%;
+  }
+  .st-mission .st-copy {
+    grid-area: copy;
+  }
+  .st-copy {
+    max-width: none;
+    margin-top: 22px;
+    font-size: 17px;
+  }
+  .st-copy .st-lead {
+    font-size: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .st-word > span,
+  .st-photo {
+    transform: none;
+  }
+  .st-gap-img {
+    transform: translate(-50%, -46%);
+  }
+}
