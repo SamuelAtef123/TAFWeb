@@ -178,6 +178,7 @@ import { Link } from 'react-router-dom';
 import BasketMenu from './BasketMenu/BasketMenu';
 import Mascot from './Mascot/Mascot';
 import Story from './Story/Story';
+import Reviews from './Reviews/Reviews';
 import './Home.css';
 
 // phones get the smaller hero video
@@ -326,6 +327,8 @@ function Home() {
         <Story />
 
         <BasketMenu />
+
+        <Reviews />
       </main>
 
       <Mascot />
