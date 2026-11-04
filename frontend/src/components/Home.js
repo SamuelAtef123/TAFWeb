@@ -242,8 +242,10 @@ function Home() {
     <div className="bk">
       <header className={scrolled ? 'bk-header solid' : 'bk-header'}>
         <Link className="bk-brand" to="/">
-          <span className="bk-mark">T&amp;F</span>
-          <span>Tino &amp; Friends <em>Bakery</em></span>
+          <img className="bk-mark" src="/tino-badge.png" alt="" width="46" height="46" />
+          <span className="bk-brand-name" aria-label="Tino & Friends Bakery">
+            Tino &amp; friends <em>bakery</em>
+          </span>
         </Link>
         <nav className="bk-nav" aria-label="Main navigation">
           <a href="#menu">Menu</a>
