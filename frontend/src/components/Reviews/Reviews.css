@@ -1,140 +1,127 @@
-/* ---------- "What friends are saying": a calm row of Instagram reels ---------- */
+/* Reviews: vertical video cards drifting sideways in a loop */
 .rv {
-  max-width: 1160px;
-  margin: 0 auto;
-  padding: 40px 28px 110px;
-  scroll-margin-top: 62px;
+  padding: 40px 0 110px;
+  overflow: hidden;
 }
+
 .rv-head {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 30px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--latte);
+  max-width: 1160px;
+  margin: 0 auto 34px;
+  padding: 0 28px 18px;
+  border-bottom: 1px solid var(--latte, #e9d6b8);
 }
 .rv-kicker {
-  margin: 0 0 10px;
-  color: #9b7b62;
-  font: 600 12px var(--f-text);
+  margin: 0 0 6px;
+  font: 600 12px var(--f-text, 'EB Garamond', serif);
   letter-spacing: 0.22em;
   text-transform: uppercase;
+  color: var(--crust, #8a4b24);
 }
-.rv .rv-head h2 {
+.rv-head h2 {
   margin: 0;
-  font-size: clamp(34px, 4.6vw, 52px);
+  font-size: clamp(34px, 4vw, 48px);
   line-height: 1.05;
+  color: var(--espresso, #24140c);
 }
-.rv-arrows {
+
+.rv-marquee {
+  --card: 250px;
+  --gap: 22px;
+  /* soft fade at both edges */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.rv-belt {
   display: flex;
-  gap: 8px;
+  gap: var(--gap);
+  width: max-content;
+  padding-left: var(--gap);
+  animation: rv-drift 60s linear infinite;
 }
-.rv-arrows button {
+.rv-marquee:hover .rv-belt,
+.rv-marquee:focus-within .rv-belt,
+.rv-marquee.held .rv-belt {
+  animation-play-state: paused;
+}
+@keyframes rv-drift {
+  to { transform: translateX(-50%); }
+}
+
+.rv-card {
+  flex: 0 0 var(--card);
+  margin: 0;
+}
+.rv-frame {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  background: var(--espresso, #24140c);
+  border: 1px solid var(--espresso, #24140c);
+  overflow: hidden;
+}
+.rv-frame video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rv-sound {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
-  border: 1px solid var(--espresso);
-  border-radius: 0;
-  background: transparent;
-  color: var(--espresso);
-  font: 400 20px/1 var(--f-text);
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s, opacity 0.2s;
-}
-.rv-arrows button:hover:not(:disabled) {
-  background: var(--espresso);
-  color: var(--paper);
-}
-.rv-arrows button:disabled {
-  opacity: 0.25;
-  cursor: default;
-}
-.rv-arrows button:focus-visible {
-  outline: 2px solid var(--espresso);
-  outline-offset: 2px;
-}
-
-/* the row: swipe / scroll sideways, each reel snaps into place */
-.rv-track {
-  display: flex;
-  align-items: flex-start;
-  gap: 24px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-padding: 0;
-  padding-bottom: 6px;
-  scrollbar-width: none;
-}
-.rv-track::-webkit-scrollbar {
-  display: none;
-}
-.rv-card {
-  flex: 0 0 340px;
-  min-height: 600px;
-  scroll-snap-align: start;
-}
-/* Instagram's card (they set most of its look themselves) */
-.rv-card .instagram-media,
-.rv-card iframe {
-  width: 100% !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  border: 1px solid var(--latte) !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-}
-.rv-card blockquote.instagram-media {
   padding: 0;
-  background: var(--paper);
+  border: 1px solid rgba(255, 249, 236, 0.8);
+  border-radius: 0;
+  background: rgba(36, 20, 12, 0.35);
+  color: var(--paper, #fff9ec);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.rv-sound:hover,
+.rv-sound.on {
+  background: var(--paper, #fff9ec);
+  color: var(--espresso, #24140c);
 }
 
-/* what shows if Instagram can't load (blocked, offline or the reel was removed) */
-.rv-fallback {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 600px;
-  padding: 26px 24px;
-  color: var(--espresso);
+.rv-missing {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  text-align: center;
+  font: italic 500 22px var(--f-display, 'Cormorant Garamond', serif);
+  color: var(--paper, #fff9ec);
   text-decoration: none;
 }
-.rv-fallback-mark {
-  color: #9b7b62;
-  font: 600 11px var(--f-text);
-  letter-spacing: 0.22em;
+
+.rv-card figcaption {
+  padding-top: 10px;
+}
+.rv-card figcaption a {
+  font: 600 11px var(--f-text, 'EB Garamond', serif);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
+  color: var(--roast, #3b2314);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
 }
-.rv-fallback-text {
-  font: italic 500 26px/1.2 var(--f-display);
-}
-.rv-fallback-go {
-  align-self: flex-start;
-  padding: 10px 16px;
-  border: 1px solid var(--espresso);
-  font: 600 11px var(--f-text);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-.rv-fallback:hover .rv-fallback-go {
-  background: var(--espresso);
-  color: var(--paper);
+.rv-card figcaption a:hover {
+  border-bottom-color: currentColor;
 }
 
-@media (max-width: 600px) {
-  .rv {
-    padding: 20px 20px 80px;
-  }
-  .rv-head {
-    align-items: center;
-  }
-  .rv-arrows button {
-    width: 40px;
-    height: 40px;
-  }
-  .rv-card {
-    flex-basis: calc(100% - 28px); /* one reel at a time, with the next one peeking */
-  }
+@media (max-width: 700px) {
+  .rv-marquee { --card: 180px; --gap: 14px; }
+  .rv-head { padding: 0 16px 14px; margin-bottom: 24px; }
+}
+
+/* no drifting for people who turn motion off: the row just scrolls by hand */
+@media (prefers-reduced-motion: reduce) {
+  .rv-marquee { overflow-x: auto; -webkit-mask-image: none; mask-image: none; }
+  .rv-belt { animation: none; }
+  .rv-belt > .rv-card[aria-hidden='true'] { display: none; }
 }

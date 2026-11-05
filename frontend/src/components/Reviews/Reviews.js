@@ -1,116 +1,131 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { SpeakerIcon } from '../icons';
 import './Reviews.css';
 
 /*
   "What friends are saying": the Instagram reels people posted about Tino & Friends,
-  shown with Instagram's own embed (it credits each creator and links back to the reel).
+  played as vertical video cards that drift slowly sideways in a loop.
 
-  To add or remove a review, edit REELS below (the code is the part after /reel/ in the link).
-  Instagram's script is only loaded once the section is about to scroll into view.
+  The videos live in frontend/public/reviews/ as review-1.mp4 … review-5.mp4
+  (with an optional still frame review-1.jpg … for before the video loads).
+  To add or remove a review, edit REVIEWS below; `reel` is the code after /reel/ in the Instagram link.
 */
-const REELS = ['DJ1RbjSI8wx', 'DCmMVCwMfBL', 'C9FrEQoNkIx', 'DP4SaLjDdwI', 'DXRLEtOiAVJ'];
+const REVIEWS = [
+  { reel: 'DJ1RbjSI8wx', file: 'review-1' },
+  { reel: 'DCmMVCwMfBL', file: 'review-2' },
+  { reel: 'C9FrEQoNkIx', file: 'review-3' },
+  { reel: 'DP4SaLjDdwI', file: 'review-4' },
+  { reel: 'DXRLEtOiAVJ', file: 'review-5' },
+];
 
-const EMBED_JS = 'https://www.instagram.com/embed.js';
+const reelUrl = code => `https://www.instagram.com/reel/${code}/`;
 
-// Instagram's embed markup; their script swaps it for the reel. The link inside is what shows if it can't.
-const embedHtml = code => {
-  const url = `https://www.instagram.com/reel/${code}/?utm_source=ig_embed&utm_campaign=loading`;
+function Card({ review, copy, live, soundOn, onSound }) {
+  const ref = useRef(null);
+  const [missing, setMissing] = useState(false);
+
+  // play only while the section is on screen
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || missing) return;
+    if (live) {
+      const p = v.play();
+      if (p && p.catch) p.catch(() => {});
+    } else {
+      v.pause();
+    }
+  }, [live, missing]);
+
+  useEffect(() => {
+    if (ref.current) ref.current.muted = !soundOn;
+  }, [soundOn]);
+
   return (
-    `<blockquote class="instagram-media" data-instgrm-permalink="${url}" data-instgrm-version="14">` +
-    `<a class="rv-fallback" href="${url}" target="_blank" rel="noopener noreferrer">` +
-    '<span class="rv-fallback-mark">Instagram</span>' +
-    '<span class="rv-fallback-text">Watch this review on Instagram</span>' +
-    '<span class="rv-fallback-go">View reel →</span>' +
-    '</a></blockquote>'
+    <figure className="rv-card" aria-hidden={copy || undefined}>
+      <div className="rv-frame">
+        {missing ? (
+          <a className="rv-missing" href={reelUrl(review.reel)} target="_blank" rel="noopener noreferrer" tabIndex={copy ? -1 : 0}>
+            Watch on Instagram
+          </a>
+        ) : (
+          <>
+            <video
+              ref={ref}
+              src={`/reviews/${review.file}.mp4`}
+              poster={`/reviews/${review.file}.jpg`}
+              muted
+              loop
+              playsInline
+              preload={live ? 'auto' : 'metadata'}
+              onError={() => setMissing(true)}
+            />
+            <button
+              type="button"
+              className={`rv-sound${soundOn ? ' on' : ''}`}
+              onClick={onSound}
+              tabIndex={copy ? -1 : 0}
+              aria-label={soundOn ? 'Mute this review' : 'Play this review with sound'}
+            >
+              <SpeakerIcon muted={!soundOn} size={15} />
+            </button>
+          </>
+        )}
+      </div>
+      <figcaption>
+        <a href={reelUrl(review.reel)} target="_blank" rel="noopener noreferrer" tabIndex={copy ? -1 : 0}>
+          View on Instagram
+        </a>
+      </figcaption>
+    </figure>
   );
-};
-
-function loadEmbeds() {
-  if (window.instgrm && window.instgrm.Embeds) {
-    window.instgrm.Embeds.process();
-    return;
-  }
-  if (document.querySelector(`script[src="${EMBED_JS}"]`)) return;
-  const s = document.createElement('script');
-  s.src = EMBED_JS;
-  s.async = true;
-  document.body.appendChild(s);
 }
 
 export default function Reviews() {
   const rootRef = useRef(null);
-  const trackRef = useRef(null);
-  const [ends, setEnds] = useState({ start: true, end: false });
+  const [live, setLive] = useState(false);
+  const [sound, setSound] = useState(null); // key of the one card playing with sound
 
-  // load Instagram's script when the section is near
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return undefined;
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (!e.isIntersecting) return;
-        loadEmbeds();
-        io.disconnect();
-      },
-      { rootMargin: '600px 0px' }
-    );
+    const io = new IntersectionObserver(([e]) => setLive(e.isIntersecting), { rootMargin: '200px 0px' });
     io.observe(el);
     return () => io.disconnect();
   }, []);
 
-  // grey out an arrow at either end of the row
-  const update = useCallback(() => {
-    const t = trackRef.current;
-    if (!t) return;
-    setEnds({ start: t.scrollLeft < 8, end: t.scrollLeft + t.clientWidth > t.scrollWidth - 8 });
-  }, []);
-
+  // leaving the section silences it
   useEffect(() => {
-    const t = trackRef.current;
-    if (!t) return undefined;
-    update();
-    t.addEventListener('scroll', update, { passive: true });
-    window.addEventListener('resize', update);
-    // the embeds change size as they load
-    const ro = new ResizeObserver(update);
-    ro.observe(t);
-    return () => {
-      t.removeEventListener('scroll', update);
-      window.removeEventListener('resize', update);
-      ro.disconnect();
-    };
-  }, [update]);
+    if (!live) setSound(null);
+  }, [live]);
 
-  const step = dir => {
-    const t = trackRef.current;
-    if (!t) return;
-    const card = t.querySelector('.rv-card');
-    const w = card ? card.getBoundingClientRect().width + 24 : 360;
-    t.scrollBy({ left: dir * w, behavior: 'smooth' });
-  };
+  // the row is drawn twice so the loop has no seam; the second copy is hidden from screen readers
+  const row = copy =>
+    REVIEWS.map(r => {
+      const key = `${copy ? 'b' : 'a'}-${r.reel}`;
+      return (
+        <Card
+          key={key}
+          review={r}
+          copy={copy}
+          live={live}
+          soundOn={sound === key}
+          onSound={() => setSound(s => (s === key ? null : key))}
+        />
+      );
+    });
 
   return (
     <section className="rv" id="reviews" ref={rootRef} aria-labelledby="rv-title">
       <div className="rv-head" data-reveal>
-        <div>
-          <p className="rv-kicker">Reviews</p>
-          <h2 id="rv-title">What friends are saying.</h2>
-        </div>
-        <div className="rv-arrows">
-          <button type="button" onClick={() => step(-1)} disabled={ends.start} aria-label="Previous reviews">
-            ←
-          </button>
-          <button type="button" onClick={() => step(1)} disabled={ends.end} aria-label="More reviews">
-            →
-          </button>
-        </div>
+        <p className="rv-kicker">Reviews</p>
+        <h2 id="rv-title">What friends are saying.</h2>
       </div>
 
-      <div className="rv-track" ref={trackRef}>
-        {REELS.map(code => (
-          // the embed replaces its own markup, so React leaves the inside of this box alone
-          <div className="rv-card" key={code} dangerouslySetInnerHTML={{ __html: embedHtml(code) }} />
-        ))}
+      <div className={`rv-marquee${sound ? ' held' : ''}`}>
+        <div className="rv-belt">
+          {row(false)}
+          {row(true)}
+        </div>
       </div>
     </section>
   );
