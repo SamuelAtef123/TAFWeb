@@ -11,11 +11,11 @@ import './Reviews.css';
   To add or remove a review, edit REVIEWS below; `reel` is the code after /reel/ in the Instagram link.
 */
 const REVIEWS = [
-  { reel: 'DJ1RbjSI8wx', file: 'review-1' },
-  { reel: 'DCmMVCwMfBL', file: 'review-2' },
-  { reel: 'C9FrEQoNkIx', file: 'review-3' },
-  { reel: 'DP4SaLjDdwI', file: 'review-4' },
-  { reel: 'DXRLEtOiAVJ', file: 'review-5' },
+  { reel: 'DJ1RbjSI8wx', file: 'review-1', by: 'ouda.5' },
+  { reel: 'DCmMVCwMfBL', file: 'review-2', by: 'abdelrahmaanshoukryy' },
+  { reel: 'C9FrEQoNkIx', file: 'review-3', by: 'sherry_on_top' },
+  { reel: 'DP4SaLjDdwI', file: 'review-4', by: 'go.with.row' },
+  { reel: 'DXRLEtOiAVJ', file: 'review-5', by: 'nawplatters' },
 ];
 
 const reelUrl = code => `https://www.instagram.com/reel/${code}/`;
@@ -44,8 +44,16 @@ function Card({ review, copy, live, soundOn, onSound }) {
     <figure className="rv-card" aria-hidden={copy || undefined}>
       <div className="rv-frame">
         {missing ? (
-          <a className="rv-missing" href={reelUrl(review.reel)} target="_blank" rel="noopener noreferrer" tabIndex={copy ? -1 : 0}>
-            Watch on Instagram
+          // the video can't play here: show its still frame and send people to the reel
+          <a
+            className="rv-missing"
+            href={reelUrl(review.reel)}
+            target="_blank"
+            rel="noopener noreferrer"
+            tabIndex={copy ? -1 : 0}
+            style={{ backgroundImage: `url(/reviews/${review.file}.jpg)` }}
+          >
+            <span>Watch on Instagram</span>
           </a>
         ) : (
           <>
@@ -56,7 +64,7 @@ function Card({ review, copy, live, soundOn, onSound }) {
               muted
               loop
               playsInline
-              preload={live ? 'auto' : 'metadata'}
+              preload="metadata"
               onError={() => setMissing(true)}
             />
             <button
@@ -72,8 +80,9 @@ function Card({ review, copy, live, soundOn, onSound }) {
         )}
       </div>
       <figcaption>
+        <span className="rv-by">@{review.by}</span>
         <a href={reelUrl(review.reel)} target="_blank" rel="noopener noreferrer" tabIndex={copy ? -1 : 0}>
-          View on Instagram
+          View reel
         </a>
       </figcaption>
     </figure>
