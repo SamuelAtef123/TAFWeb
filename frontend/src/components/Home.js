@@ -178,6 +178,7 @@ import { Link } from 'react-router-dom';
 import BasketMenu from './BasketMenu/BasketMenu';
 import Mascot from './Mascot/Mascot';
 import Story from './Story/Story';
+import Reviews from './Reviews/Reviews';
 import './Home.css';
 
 // phones get the smaller hero video
@@ -288,9 +289,10 @@ function Home() {
             <div className="bk-arch" aria-hidden="true" /> */}
 
             <div className="bk-hero-logo-wrap">
+              {/* Logo3 with the "Tino & friends" lettering laid fully in front of Tino */}
               <img
                 className="bk-hero-logo"
-                src="/Logo3.png"
+                src="/hero-logo.png"
                 alt="Tino & Friends Bakery mascot"
               />
             </div>
@@ -325,6 +327,8 @@ function Home() {
         <Story />
 
         <BasketMenu />
+
+        <Reviews />
       </main>
 
       <Mascot />

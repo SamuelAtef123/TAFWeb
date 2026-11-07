@@ -16,6 +16,21 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 
 const MODEL_URL = '/mascot/tino3d.glb';
 const TAU = Math.PI * 2;
+// basket.webp (666 x 696 px): the top edge of the cloth's front fold, measured on the photo.
+// Tino stands behind it, so it hides his legs exactly where the real fold is.
+const BASKET = { w: 666, h: 696, below: 0.7 }; // below: how far the hiding shape reaches under the basket
+const FOLD = [
+  [0, 404], [90, 399], [120, 411], [150, 426], [180, 432], [210, 433], [240, 433], [270, 427],
+  [300, 420], [330, 417], [360, 414], [420, 410], [480, 403], [540, 400], [600, 394], [666, 392],
+];
+const foldAt = x => {
+  for (let i = 1; i < FOLD.length; i++) {
+    const [x1, y1] = FOLD[i];
+    const [x0, y0] = FOLD[i - 1];
+    if (x <= x1) return y0 + ((y1 - y0) * (x - x0)) / (x1 - x0);
+  }
+  return FOLD[FOLD.length - 1][1];
+};
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const E = {
@@ -157,6 +172,29 @@ export default class Companion {
     this.scene.add(this.occluder);
     this.occluderRect = null;
 
+    // depth-only cut-out of the basket's front (everything below the cloth fold), so he can stand
+    // *inside* the basket in the menu
+    const wc = document.createElement('canvas');
+    wc.width = BASKET.w;
+    wc.height = Math.round(BASKET.h * (1 + BASKET.below));
+    const wg = wc.getContext('2d');
+    wg.fillStyle = '#fff';
+    wg.beginPath();
+    FOLD.forEach(([x, y], i) => (i ? wg.lineTo(x, y) : wg.moveTo(x, y)));
+    wg.lineTo(BASKET.w, wc.height);
+    wg.lineTo(0, wc.height);
+    wg.closePath();
+    wg.fill();
+    this.wallTex = new THREE.CanvasTexture(wc);
+    this.wall = new THREE.Mesh(
+      new THREE.PlaneGeometry(1, 1),
+      new THREE.MeshBasicMaterial({ map: this.wallTex, alphaTest: 0.5, colorWrite: false })
+    );
+    this.wall.renderOrder = -1;
+    this.wall.visible = false;
+    this.scene.add(this.wall);
+    this.home = 'corner'; // basket (big screens, basket in view) | corner
+
     // clickable box that follows him around (the canvas itself never takes clicks)
     this.hitbox = document.createElement('button');
     this.hitbox.type = 'button';
@@ -224,6 +262,7 @@ export default class Companion {
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.textures.forEach(t => t.dispose());
     this.shadowTex.dispose();
+    this.wallTex.dispose();
     this.spin.clear(); // the shared model stays cached for next time
     this.renderer.dispose();
     this.renderer.domElement.remove();
@@ -422,6 +461,14 @@ export default class Companion {
       this.occluder.scale.set(r.width, r.height, 1);
     } else this.occluder.visible = false;
 
+    // the basket's front wall hides his legs while he lives in the basket
+    const w = this.home === 'basket' && this.root.visible ? this.basketWall() : null;
+    if (w) {
+      this.wall.visible = true;
+      this.wall.position.set(w.left + w.width / 2, -(w.top + w.height / 2), 1500);
+      this.wall.scale.set(w.width, w.height, 1);
+    } else this.wall.visible = false;
+
     this.renderer.render(this.scene, this.camera);
 
     if (this.root.visible) {
@@ -575,6 +622,41 @@ export default class Companion {
     return { x: (small ? 14 : 24) + h * 0.28, y: window.innerHeight - (small ? 10 : 16), h };
   }
 
+  // the menu's basket (big screens only; on phones it is a small bar at the top)
+  basketEl() {
+    if (window.innerWidth <= 900) return null;
+    const el = document.querySelector('.bm-basket');
+    const r = el && el.getBoundingClientRect();
+    return r && r.width ? r : null;
+  }
+
+  // standing in the basket, waist-deep behind the cloth fold, on the left of the opening
+  // (the middle stays free for treats and the price tag on the right stays readable)
+  basketSpot() {
+    const r = this.basketEl();
+    if (!r) return null;
+    const h = clamp(r.height * 0.56, 110, 190);
+    const px = BASKET.w * 0.27;
+    return { x: r.left + r.width * 0.27, y: r.top + (r.height * foldAt(px)) / BASKET.h + h * 0.4, h };
+  }
+
+  // the basket's box, stretched below it so the cut-out also covers him while he climbs in and out
+  basketWall() {
+    const r = this.basketEl();
+    if (!r) return null;
+    return { left: r.left, top: r.top, width: r.width, height: r.height * (1 + BASKET.below) };
+  }
+
+  // where he should live right now: in the basket when it is fully on screen, else in the corner
+  wantHome() {
+    const r = this.basketEl();
+    return r && r.top > 64 && r.bottom < window.innerHeight - 8 ? 'basket' : 'corner';
+  }
+
+  spot(kind = this.home) {
+    return (kind === 'basket' && this.basketSpot()) || this.dockSpot();
+  }
+
   besideSpot(getRect) {
     const r = getRect();
     if (!r || !r.width) return null;
@@ -596,16 +678,16 @@ export default class Companion {
   /* =================== scenes =================== */
 
   // hides behind the 2.5D Tino, peeks out, pops out over his shoulder and shows off
-  async intro(getRect, cue = () => {}) {
+  async intro(getRect, cue = () => {}, { calm = false } = {}) {
     this.busy = true; // little tricks wait until the show is over
     try {
-      await this.introShow(getRect, cue);
+      await this.introShow(getRect, cue, calm);
     } finally {
       this.busy = false;
     }
   }
 
-  async introShow(getRect, cue) {
+  async introShow(getRect, cue, calm = false) {
     const step = this.newRun();
     this.where = 'hero';
     // wait (briefly) until the logo Tino is on the page
@@ -645,6 +727,11 @@ export default class Companion {
     this.follow = () => this.besideSpot(getRect);
     await step(this.play('land', 260));
     await step(Promise.all([this.play('wave', 1300), cue('hello')]));
+    if (calm) {
+      // calm Tino: no acrobatics, just a wave and hello
+      await step(cue('welcome'));
+      return;
+    }
     await step(cue('watch'));
     await step(this.play('backflip'));
     await step(this.play('land', 220));
@@ -711,6 +798,40 @@ export default class Companion {
     await step(this.play('land', 260));
   }
 
+  // first appearance: he pops up out of the basket as your first treat lands in it
+  // (on phones, or when the basket is off screen, he drops into the corner instead)
+  async arrive() {
+    if (this.wantHome() !== 'basket') return this.dropIn();
+    const step = this.newRun();
+    this.home = 'basket';
+    this.where = 'travel';
+    this.occluderRect = null;
+    const s = this.spot();
+    this.h = s.h;
+    this.pos = { x: s.x, y: s.y + s.h * 0.72 }; // still hidden below the rim
+    this.show(true);
+    await step(this.moveTo(() => this.spot(), { dur: 620, ease: 'out', clip: 'fly' }));
+    this.follow = () => this.spot();
+    this.where = 'dock';
+    await step(this.play('cheer', 900));
+    await step(this.play('wave', 1300));
+  }
+
+  // hop between the basket and the corner as the basket scrolls in and out of view
+  async toHome(kind) {
+    const step = this.newRun();
+    this.where = 'travel';
+    this.occluderRect = null;
+    const from = this.home;
+    this.home = kind === 'basket' || from === 'basket' ? 'basket' : kind; // keep the wall while climbing out
+    this.follow = null;
+    await step(this.moveTo(() => this.spot(kind), { dur: 820, arc: 150, clip: 'fly', h: this.spot(kind).h }));
+    this.home = kind;
+    this.follow = () => this.spot();
+    this.where = 'dock';
+    await step(this.play('land', 240));
+  }
+
   // drop into the corner from the top of the screen
   async dropIn() {
     const step = this.newRun();
@@ -718,10 +839,11 @@ export default class Companion {
     this.occluderRect = null;
     const d = this.dockSpot();
     this.h = d.h;
+    this.home = 'corner';
     this.pos = { x: d.x, y: -40 };
     this.show(true);
     await step(this.moveTo(() => this.dockSpot(), { dur: 900, ease: 'in', clip: 'fly' }));
-    this.follow = () => this.dockSpot();
+    this.follow = () => this.spot();
     this.where = 'dock';
     await step(this.play('land', 300));
   }
@@ -769,14 +891,14 @@ export default class Companion {
       await this.flyPlate(mouthEl);
       drop();
       await step(this.play('cheer', 900));
-      await step(this.moveTo(() => this.dockSpot(), { dur: 780, arc: 120, clip: 'fly', h: this.dockSpot().h }));
+      await step(this.moveTo(() => this.spot(), { dur: 780, arc: 120, clip: 'fly', h: this.spot().h }));
       await step(this.play('land', 220));
     } finally {
       this.holdPhoto(null);
       drop(); // never lose an order, even if he got interrupted
       this.busy = false;
       if (this.where === 'delivering') {
-        this.follow = () => this.dockSpot();
+        this.follow = () => this.spot();
         this.where = 'dock';
       }
     }

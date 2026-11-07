@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { MENU, CATEGORY_ICONS } from '../../data/menu';
+import { MENU } from '../../data/menu';
 import { fromApi, normalizeCart } from '../../utils/shop';
 import './BasketMenu.css';
 
@@ -22,28 +22,30 @@ function readCart() {
    Layers:  photo  ->  products  ->  the photo's own FRONT wall on top,
    so products sit *inside* the real basket.                                 */
 const IMG = { w: 666, h: 696 };
-const ITEM_W = 146;
-const MOUTH = { x: 315, y: 366 }; // where things drop in
-// everything below the front rim of the basket (clip for the top copy of the photo)
+const ITEM_W = 168; // the product photos have a little room around them, so a touch bigger than before
+const MOUTH = { x: 450, y: 366 }; // where things drop in (the middle of the free part of the basket)
+// everything below the top edge of the cloth's front fold (clip for the top copy of the photo);
+// measured on the photo, the same line that hides Tino's legs (see FOLD in Mascot/three/Companion.js)
 const FRONT = [
-  [0, 418], [60, 414], [100, 410], [200, 406], [330, 403], [440, 401],
-  [488, 399], [520, 399], [600, 398], [666, 396], [666, 696], [0, 696],
+  [0, 404], [90, 399], [120, 411], [150, 426], [180, 432], [210, 433], [240, 433], [270, 427],
+  [300, 420], [330, 417], [360, 414], [420, 410], [480, 403], [540, 400], [600, 394], [666, 392],
+  [666, 696], [0, 696],
 ];
 const FRONT_CLIP = `polygon(${FRONT.map(
   ([x, y]) => `${((x / IMG.w) * 100).toFixed(2)}% ${((y / IMG.h) * 100).toFixed(2)}%`
 ).join(',')})`;
 const at = (x, y) => ({ left: `${(x / IMG.w) * 100}%`, top: `${(y / IMG.h) * 100}%` });
 
-// where products pile up inside the basket, in the order they are added
+// where products pile up inside the basket, in the order they are added.
+// Tino stands in the left end of the basket (x up to ~280), so the treats fill the middle and right:
+// a front row first, then a row behind it. Up to 6 show; the rest are counted as "+N more".
 const SLOTS = [
-  { x: 252, y: 386, s: 1, r: -6 },
-  { x: 392, y: 384, s: 1, r: 5 },
-  { x: 320, y: 366, s: 1.04, r: -2 },
-  { x: 192, y: 396, s: 0.88, r: 8 },
-  { x: 458, y: 392, s: 0.88, r: -8 },
-  { x: 262, y: 332, s: 0.9, r: 4 },
-  { x: 378, y: 330, s: 0.9, r: -5 },
-  { x: 322, y: 294, s: 0.8, r: 2 },
+  { x: 400, y: 386, s: 1, r: -6 },
+  { x: 530, y: 384, s: 0.95, r: 8 },
+  { x: 465, y: 346, s: 0.9, r: -3 },
+  { x: 372, y: 350, s: 0.85, r: 10 },
+  { x: 566, y: 346, s: 0.82, r: -9 },
+  { x: 470, y: 308, s: 0.8, r: 4 },
 ];
 
 // "goes great with" suggestions, by category of what was just added
@@ -63,153 +65,6 @@ const PAIRS = {
   Smoothies: ['COO001'],
   'New Drinks': ['COO001'],
 };
-
-/* ---------- tiny synthesized sounds ---------- */
-let audioCtx = null;
-function audio() {
-  if (!audioCtx) {
-    const C = window.AudioContext || window.webkitAudioContext;
-    if (!C) return null;
-    audioCtx = new C();
-  }
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  return audioCtx;
-}
-function playPop() {
-  const a = audio();
-  if (!a) return;
-  const t = a.currentTime;
-  const o = a.createOscillator();
-  const g = a.createGain();
-  o.type = 'sine';
-  o.frequency.setValueAtTime(380, t);
-  o.frequency.exponentialRampToValueAtTime(920, t + 0.09);
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(0.16, t + 0.01);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-  o.connect(g);
-  g.connect(a.destination);
-  o.start(t);
-  o.stop(t + 0.25);
-  const len = Math.floor(a.sampleRate * 0.12);
-  const buf = a.createBuffer(1, len, a.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
-  const n = a.createBufferSource();
-  n.buffer = buf;
-  const f = a.createBiquadFilter();
-  f.type = 'bandpass';
-  f.frequency.value = 2600;
-  const g2 = a.createGain();
-  g2.gain.value = 0.1;
-  n.connect(f);
-  f.connect(g2);
-  g2.connect(a.destination);
-  n.start(t + 0.06);
-}
-
-/* ---------- crumbs + sparkles (canvas) ---------- */
-function useParticles(canvasRef) {
-  const parts = useRef([]);
-  const raf = useRef(0);
-  const size = useRef({ w: 0, h: 0, dpr: 1 });
-
-  useEffect(() => {
-    const c = canvasRef.current;
-    if (!c) return undefined;
-    const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
-      const w = c.parentElement.clientWidth;
-      const h = c.parentElement.clientHeight;
-      size.current = { w, h, dpr };
-      c.width = w * dpr;
-      c.height = h * dpr;
-    };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(c.parentElement);
-    return () => ro.disconnect();
-  }, [canvasRef]);
-
-  const loop = useCallback(() => {
-    const c = canvasRef.current;
-    if (!c) return;
-    const ctx = c.getContext('2d');
-    const { w, h, dpr } = size.current;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, w, h);
-    const ps = parts.current;
-    for (let i = ps.length - 1; i >= 0; i--) {
-      const p = ps[i];
-      p.life -= 1;
-      if (p.life <= 0) {
-        ps.splice(i, 1);
-        continue;
-      }
-      p.vy += p.g;
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vx *= 0.985;
-      p.rot += p.vr;
-      ctx.save();
-      ctx.globalAlpha = Math.min(1, p.life / p.fade);
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rot);
-      ctx.fillStyle = p.color;
-      if (p.type === 'star') {
-        const s = p.size * 1.7;
-        ctx.beginPath();
-        for (let k = 0; k < 8; k++) {
-          const r = k % 2 ? s * 0.26 : s;
-          const a = (k * Math.PI) / 4;
-          ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-        }
-        ctx.closePath();
-        ctx.fill();
-      } else {
-        ctx.beginPath();
-        ctx.ellipse(0, 0, p.size, p.size * 0.65, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-    }
-    raf.current = ps.length ? requestAnimationFrame(loop) : 0;
-  }, [canvasRef]);
-
-  const burst = useCallback(
-    (x, y) => {
-      const crumbColors = ['#c98f4b', '#b8742e', '#8a5a28', '#d9a35a', '#a8692f'];
-      const sparkColors = ['#e0a458', '#d4782f', '#f2c36b', '#f0a23a'];
-      for (let i = 0; i < 26; i++) {
-        const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.3;
-        const sp = 2 + Math.random() * 5.2;
-        parts.current.push({
-          type: 'crumb', x, y,
-          vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: 0.22,
-          size: 2 + Math.random() * 3.4, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 0.3,
-          life: 55 + Math.random() * 30, fade: 25,
-          color: crumbColors[(Math.random() * crumbColors.length) | 0],
-        });
-      }
-      for (let i = 0; i < 14; i++) {
-        const a = Math.random() * Math.PI * 2;
-        const sp = 0.6 + Math.random() * 2.6;
-        parts.current.push({
-          type: 'star', x, y,
-          vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1.4, g: 0.03,
-          size: 2.2 + Math.random() * 3, rot: Math.random() * 3, vr: (Math.random() - 0.5) * 0.18,
-          life: 50 + Math.random() * 40, fade: 30,
-          color: sparkColors[(Math.random() * sparkColors.length) | 0],
-        });
-      }
-      if (!raf.current) raf.current = requestAnimationFrame(loop);
-    },
-    [loop]
-  );
-
-  useEffect(() => () => cancelAnimationFrame(raf.current), []);
-  return burst;
-}
 
 /* ---------- number that rolls up to its new value ---------- */
 function Ticker({ value }) {
@@ -234,7 +89,8 @@ function Ticker({ value }) {
   return <>{fmt(shown)}</>;
 }
 
-/* Small categories share a section on the full menu (display only - the data keeps its own category) */
+/* Small categories share a section: the menu sections AND the category buttons use these groups
+   (display only - the data keeps its own category) */
 const SECTION_OF = {
   Cookies: 'Sweets',
   Muffins: 'Sweets',
@@ -249,14 +105,15 @@ const SECTION_OF = {
   Beverages: 'Cold Drinks',
   'New Drinks': 'Cold Drinks',
 };
+const sectionOf = p => SECTION_OF[p.category] || p.category;
 
-/* ---------- image with an emoji fallback ---------- */
-function Photo({ src, alt, emoji, className }) {
+/* ---------- image with a quiet fallback mark ---------- */
+function Photo({ src, alt, className }) {
   const [bad, setBad] = useState(false);
   if (!src || bad) {
     return (
       <div className={`bm-fallback ${className || ''}`} aria-hidden="true">
-        {emoji}
+        ✦
       </div>
     );
   }
@@ -278,26 +135,19 @@ export default function BasketMenu() {
   const [dragId, setDragId] = useState(null);
   const [overStage, setOverStage] = useState(false);
   const [bubble, setBubble] = useState(null);
-  const [sound, setSound] = useState(() => localStorage.getItem('bm-sound') === '1');
 
   const stageRef = useRef(null);
   const basketRef = useRef(null);
   const mouthRef = useRef(null);
-  const tagRef = useRef(null);
   const ghostRef = useRef(null);
-  const canvasRef = useRef(null);
   const dragRef = useRef(null);
   const overRef = useRef(false);
   const cartRef = useRef(cart);
   const menuRef = useRef(menu);
-  const soundRef = useRef(sound);
   const bubbleTimer = useRef(0);
 
   cartRef.current = cart;
   menuRef.current = menu;
-  soundRef.current = sound;
-
-  const burst = useParticles(canvasRef);
 
   const count = cart.reduce((s, i) => s + i.quantity, 0);
   const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
@@ -311,14 +161,6 @@ export default function BasketMenu() {
     // let the page header update its cart counter
     window.dispatchEvent(new Event('cart:updated'));
   }, [cart]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('bm-sound', sound ? '1' : '0');
-    } catch (err) {
-      /* ignore */
-    }
-  }, [sound]);
 
   useEffect(() => {
     const onKey = e => e.key === 'Escape' && setPanel(false);
@@ -351,12 +193,14 @@ export default function BasketMenu() {
     setCart(prev => normalizeCart(prev, menu));
   }, [menu]);
 
-  const categories = useMemo(() => [...new Set(menu.map(p => p.category))], [menu]);
+  // the buttons are the menu's sections (Viennoiserie, Sweets, Hot Drinks...), in menu order
+  const categories = useMemo(() => [...new Set(menu.map(sectionOf))], [menu]);
 
   const counts = useMemo(() => {
     const m = { All: menu.length };
     menu.forEach(p => {
-      m[p.category] = (m[p.category] || 0) + 1;
+      const sec = sectionOf(p);
+      m[sec] = (m[sec] || 0) + 1;
     });
     return m;
   }, [menu]);
@@ -365,22 +209,22 @@ export default function BasketMenu() {
     const q = query.trim().toLowerCase();
     return menu.filter(
       p =>
-        (category === 'All' || p.category === category) &&
+        (category === 'All' || sectionOf(p) === category) &&
         (!q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q))
     );
   }, [menu, category, query]);
 
-  // Menu laid out in category sections (one section when a category or search is active)
+  // Menu laid out in sections (one section when a category button or search is active)
   const sections = useMemo(() => {
     if (query.trim()) return [{ title: `results for “${query.trim()}”`, items: filtered }];
     const groups = new Map();
     filtered.forEach(p => {
-      const title = category === 'All' ? SECTION_OF[p.category] || p.category : p.category;
+      const title = sectionOf(p);
       if (!groups.has(title)) groups.set(title, []);
       groups.get(title).push(p);
     });
     return [...groups].map(([title, items]) => ({ title, items }));
-  }, [filtered, query, category]);
+  }, [filtered, query]);
 
   /* ---------- cart ---------- */
   const addToCart = useCallback((product, qty = 1) => {
@@ -442,12 +286,8 @@ export default function BasketMenu() {
     const sr = stage.getBoundingClientRect();
     const x = pt.x - sr.left;
     const y = pt.y - sr.top;
-    burst(x, y);
-    spawn('bm-ripple', x, y);
-    spawn('bm-ripple bm-ripple2', x, y);
     spawn('bm-float', x, y - 34, `+1 ${product.name}`);
     pulse(basketRef, 'squash');
-    pulse(tagRef, 'swing');
     if (navigator.vibrate) {
       try {
         navigator.vibrate(12);
@@ -455,7 +295,6 @@ export default function BasketMenu() {
         /* not supported */
       }
     }
-    if (soundRef.current) playPop();
   };
 
   const suggestFor = product => {
@@ -754,13 +593,13 @@ export default function BasketMenu() {
       }}
     >
       <div className="bk-img">
-        <Photo src={p.image} alt={p.name} emoji={CATEGORY_ICONS[p.category]} />
+        <Photo src={p.image} alt={p.name} />
         {!p.available ? <span className="bm-ribbon bm-soldout">Sold out</span> : p.featured && <span className="bm-ribbon">signature</span>}
       </div>
       <div className="bk-info">
         <h3>{p.name.toLowerCase()}</h3>
         <p className="bm-desc">{p.description}</p>
-        <p className="bk-price">{fmt(p.price)} egp</p>
+        <p className="bk-price">{fmt(p.price)} EGP</p>
       </div>
       <button
         className="bk-add"
@@ -791,18 +630,10 @@ export default function BasketMenu() {
             style={{ '--lean': 0 }}
             aria-label="Your basket"
           >
-            <button
-              type="button"
-              className={`bm-sound ${sound ? 'on' : ''}`}
-              onClick={() => setSound(s => !s)}
-              aria-pressed={sound}
-              aria-label={sound ? 'Turn sounds off' : 'Turn sounds on'}
-              title={sound ? 'Sounds on' : 'Sounds off'}
-            >
-              {sound ? '🔊' : '🔈'}
-            </button>
-
-            <p className="bm-eyebrow">Your basket</p>
+            <header className="bm-head">
+              <p className="bm-eyebrow">Your basket</p>
+              <span className="bm-count">{count ? `${count} ${count === 1 ? 'item' : 'items'}` : 'Empty'}</span>
+            </header>
 
             <div className="bm-basket-wrap">
               <div className="bm-shadow" aria-hidden="true" />
@@ -820,11 +651,11 @@ export default function BasketMenu() {
                         style={{
                           ...at(slot.x, slot.y),
                           width: `${((ITEM_W * slot.s) / IMG.w) * 100}%`,
-                          zIndex: i + 1,
+                          zIndex: slot.y, // lower in the basket = nearer = on top
                         }}
                       >
                         <div className="bm-med-in" key={`${id}:${it.quantity}`} style={{ '--r': `${slot.r}deg` }}>
-                          <Photo src={it.image} alt={it.name} emoji={CATEGORY_ICONS[it.category] || '🥐'} />
+                          <Photo src={it.image} alt={it.name} />
                           {it.quantity > 1 && <b className="bm-qty">×{it.quantity}</b>}
                         </div>
                       </div>
@@ -850,48 +681,34 @@ export default function BasketMenu() {
                   <span className="bm-mouth-label">Drop it in</span>
                 </div>
 
-                <svg className="bm-steam" viewBox="0 0 200 120" aria-hidden="true">
-                  <path d="M70 120 C55 95 90 85 72 55 C62 36 82 24 74 4" />
-                  <path d="M104 120 C88 98 122 84 106 56 C96 38 114 26 108 6" />
-                  <path d="M136 120 C122 97 152 86 138 58 C130 42 144 30 140 10" />
-                </svg>
               </div>
 
-              <button
-                type="button"
-                ref={tagRef}
-                className="bm-tag"
-                onClick={() => setPanel(true)}
-                aria-label={`Open basket: ${count} items, ${fmt(total)} EGP`}
-              >
-                <i className="bm-tag-hole" />
-                <span className="bm-tag-n">
-                  {count} {count === 1 ? 'treat' : 'treats'}
-                </span>
-                <span className="bm-tag-total">
-                  <Ticker value={total} /> <small>EGP</small>
-                </span>
-              </button>
 
               {hidden > 0 && <span className="bm-more">+{hidden} more</span>}
             </div>
 
-            <p className={`bm-hint ${cart.length ? 'quiet' : ''}`}>Drag a treat onto the basket, or tap +</p>
-
-            <div className="bm-actions">
-              <button type="button" onClick={() => setPanel(true)}>
-                Review
+            {/* the total, set like the last line of a receipt; opens the full list */}
+            {cart.length ? (
+              <button
+                type="button"
+                className="bm-summary"
+                onClick={() => setPanel(true)}
+                aria-label={`Review basket: ${count} items, ${fmt(total)} EGP`}
+              >
+                <span className="bm-sum-label">Subtotal</span>
+                <span className="bm-sum-total">
+                  <Ticker value={total} /> <small>EGP</small>
+                </span>
               </button>
-              <Link className={cart.length ? '' : 'disabled'} to="/cart" aria-disabled={!cart.length}>
-                Checkout →
-              </Link>
-            </div>
+            ) : (
+              <p className="bm-hint">Drag a treat into the basket, or tap +</p>
+            )}
 
             {bubble && (
               <div className="bm-bubble" role="status">
-                <Photo src={bubble.image} alt="" emoji="☕" className="bm-bubble-img" />
+                <Photo src={bubble.image} alt="" className="bm-bubble-img" />
                 <div>
-                  <small>Goes great with</small>
+                  <small>Pairs well with</small>
                   <strong>{bubble.name}</strong>
                   <span>{fmt(bubble.price)} EGP</span>
                 </div>
@@ -913,7 +730,16 @@ export default function BasketMenu() {
               </div>
             )}
 
-            <canvas ref={canvasRef} className="bm-particles" aria-hidden="true" />
+            <div className="bm-actions">
+              <button type="button" onClick={() => setPanel(true)}>
+                Review
+              </button>
+              <Link className={cart.length ? '' : 'disabled'} to="/cart" aria-disabled={!cart.length}>
+                Checkout →
+              </Link>
+            </div>
+
+
           </aside>
 
           {/* ===== the menu ===== */}
@@ -929,7 +755,7 @@ export default function BasketMenu() {
                 />
               </label>
               <button type="button" className="bm-surprise" onClick={surprise}>
-                🎲 Surprise me
+                Surprise me
               </button>
             </div>
 
@@ -943,9 +769,6 @@ export default function BasketMenu() {
                   className={category === c ? 'active' : ''}
                   onClick={() => setCategory(c)}
                 >
-                  <span className="bm-chip-ic" aria-hidden="true">
-                    {CATEGORY_ICONS[c]}
-                  </span>
                   {c}
                   <em>{counts[c]}</em>
                 </button>
@@ -975,7 +798,7 @@ export default function BasketMenu() {
       {/* ---------- what you're carrying while you drag ---------- */}
       <div ref={ghostRef} className="bm-ghost" aria-hidden="true">
         {ghostProduct && (
-          <Photo src={ghostProduct.image} alt="" emoji={CATEGORY_ICONS[ghostProduct.category]} />
+          <Photo src={ghostProduct.image} alt="" />
         )}
       </div>
 
@@ -996,7 +819,7 @@ export default function BasketMenu() {
 
         {cart.length === 0 ? (
           <div className="bm-panel-empty">
-            <span>🧺</span>
+            <span>✦</span>
             <p>Your basket is waiting.</p>
             <small>Drag something warm and buttery into it.</small>
           </div>
@@ -1007,7 +830,7 @@ export default function BasketMenu() {
               return (
                 <li key={id}>
                   <div className="bm-line-img">
-                    <Photo src={it.image} alt="" emoji={CATEGORY_ICONS[it.category] || '🥐'} />
+                    <Photo src={it.image} alt="" />
                   </div>
                   <div className="bm-line-info">
                     <strong>
@@ -1024,7 +847,7 @@ export default function BasketMenu() {
                       +
                     </button>
                   </div>
-                  <b className="bm-line-total">{fmt(it.price * it.quantity)}</b>
+                  <b className="bm-line-total">{fmt(it.price * it.quantity)} EGP</b>
                 </li>
               );
             })}

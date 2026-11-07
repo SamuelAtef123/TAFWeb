@@ -1,0 +1,148 @@
+/* Reviews: vertical video cards drifting sideways in a loop */
+.rv {
+  padding: 40px 0 110px;
+  overflow: hidden;
+}
+
+.rv-head {
+  max-width: 1160px;
+  margin: 0 auto 34px;
+  padding: 0 28px 18px;
+  border-bottom: 1px solid var(--latte, #e9d6b8);
+}
+.rv-kicker {
+  margin: 0 0 6px;
+  font: 600 12px var(--f-text, 'EB Garamond', serif);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--crust, #8a4b24);
+}
+.rv-head h2 {
+  margin: 0;
+  font-size: clamp(34px, 4vw, 48px);
+  line-height: 1.05;
+  color: var(--espresso, #24140c);
+}
+
+.rv-marquee {
+  --card: 250px;
+  --gap: 22px;
+  /* soft fade at both edges */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.rv-belt {
+  display: flex;
+  gap: var(--gap);
+  width: max-content;
+  padding-left: var(--gap);
+  animation: rv-drift 60s linear infinite;
+}
+.rv-marquee:hover .rv-belt,
+.rv-marquee:focus-within .rv-belt,
+.rv-marquee.held .rv-belt {
+  animation-play-state: paused;
+}
+@keyframes rv-drift {
+  to { transform: translateX(-50%); }
+}
+
+.rv-card {
+  flex: 0 0 var(--card);
+  margin: 0;
+}
+.rv-frame {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  background: var(--espresso, #24140c);
+  border: 1px solid var(--espresso, #24140c);
+  overflow: hidden;
+}
+.rv-frame video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rv-sound {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(255, 249, 236, 0.8);
+  border-radius: 0;
+  background: rgba(36, 20, 12, 0.35);
+  color: var(--paper, #fff9ec);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.rv-sound:hover,
+.rv-sound.on {
+  background: var(--paper, #fff9ec);
+  color: var(--espresso, #24140c);
+}
+
+.rv-missing {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 18px;
+  background: var(--espresso, #24140c) center / cover no-repeat;
+  text-decoration: none;
+}
+.rv-missing span {
+  padding: 9px 14px;
+  border: 1px solid var(--paper, #fff9ec);
+  background: rgba(36, 20, 12, 0.55);
+  font: 600 11px var(--f-text, 'EB Garamond', serif);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--paper, #fff9ec);
+}
+
+.rv-card figcaption {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding-top: 10px;
+}
+.rv-by {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: italic 500 18px var(--f-display, 'Cormorant Garamond', serif);
+  color: var(--espresso, #24140c);
+}
+.rv-card figcaption a {
+  font: 600 11px var(--f-text, 'EB Garamond', serif);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--roast, #3b2314);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 1px solid transparent;
+}
+.rv-card figcaption a:hover {
+  border-bottom-color: currentColor;
+}
+
+@media (max-width: 700px) {
+  .rv-marquee { --card: 180px; --gap: 14px; }
+  .rv-head { padding: 0 16px 14px; margin-bottom: 24px; }
+}
+
+/* no drifting for people who turn motion off: the row just scrolls by hand */
+@media (prefers-reduced-motion: reduce) {
+  .rv-marquee { overflow-x: auto; -webkit-mask-image: none; mask-image: none; }
+  .rv-belt { animation: none; }
+  .rv-belt > .rv-card[aria-hidden='true'] { display: none; }
+}

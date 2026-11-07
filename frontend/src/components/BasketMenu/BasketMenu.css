@@ -38,75 +38,94 @@ body.bm-grabbing {
   min-width: 0;
 }
 
-/* ---------- the basket panel (stays in view while the menu scrolls) ---------- */
+/* ---------- the basket panel (stays in view while the menu scrolls) ----------
+   Flat paper sheet, one hairline, square corners: the basket photo is the only picture. */
 .bm-stage {
   --lean: 0;
   position: sticky;
   top: 92px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 22px 22px 22px;
+  align-items: stretch;
+  padding: 22px 24px 24px;
   overflow: hidden;
   isolation: isolate;
   border: 1px solid var(--latte);
-  border-radius: 32px;
-  background: linear-gradient(180deg, #fffaf0 0%, #f8e9cf 100%);
-  box-shadow: 0 34px 60px -34px rgba(59, 35, 20, 0.4);
-  transition: box-shadow 0.3s, border-color 0.3s;
+  border-radius: 0;
+  background: var(--paper);
+  transition: border-color 0.3s;
 }
-/* the one soft glow behind the basket - the only decoration */
-.bm-stage::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 6%;
-  z-index: -1;
-  width: 130%;
-  aspect-ratio: 1;
-  transform: translateX(-50%);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(224, 164, 88, 0.3) 0%, rgba(224, 164, 88, 0.1) 36%, transparent 62%);
+.bm-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--latte);
 }
 .bm-eyebrow {
   margin: 0;
-  font: 400 21px var(--f-display);
+  font: 500 26px/1 var(--f-display);
   font-size-adjust: none;
-  color: var(--roast);
+  color: var(--espresso);
 }
-.bm-sound {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  z-index: 6;
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--latte);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.7);
-  font-size: 13px;
-  cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
-}
-.bm-sound:hover {
-  transform: scale(1.1);
-}
-.bm-sound.on {
-  background: var(--gold);
-  border-color: var(--gold);
+.bm-count {
+  font: 600 11px var(--f-text);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #9b7b62;
 }
 .bm-hint {
-  margin: 4px 0 14px;
-  font: 500 13px var(--f-text);
-  color: #8a6a4e;
+  margin: 0;
+  padding: 16px 0 18px;
+  border-top: 1px solid var(--latte);
+  font: italic 400 15px var(--f-text);
+  color: #9b7b62;
   text-align: center;
-  transition: opacity 0.5s;
 }
-.bm-hint.quiet {
-  opacity: 0.5;
+
+/* the total, like the last line of a receipt */
+.bm-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0;
+  padding: 14px 0 18px;
+  border: 0;
+  border-top: 1px solid var(--espresso);
+  background: none;
+  color: var(--espresso);
+  text-align: left;
+  cursor: pointer;
 }
+.bm-sum-label {
+  font: 600 11px var(--f-text);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #9b7b62;
+}
+.bm-sum-total {
+  font: 500 32px/1 var(--f-display);
+  font-size-adjust: none;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.bm-sum-total small {
+  margin-left: 2px;
+  font: 600 11px var(--f-text);
+  letter-spacing: 0.18em;
+  color: #9b7b62;
+}
+.bm-summary:hover .bm-sum-label,
+.bm-summary:focus-visible .bm-sum-label {
+  color: var(--espresso);
+}
+.bm-summary:focus-visible {
+  outline: 2px solid var(--espresso);
+  outline-offset: 2px;
+}
+
 .bm-actions {
-  order: 6;
   display: grid;
   grid-template-columns: 1fr 1.35fr;
   gap: 8px;
@@ -117,26 +136,28 @@ body.bm-grabbing {
   display: grid;
   place-items: center;
   height: 44px;
-  border: 1px solid var(--roast);
-  border-radius: 999px;
+  border: 1px solid var(--espresso);
+  border-radius: 0;
   background: transparent;
-  color: var(--roast);
-  font: 700 14px var(--f-text);
+  color: var(--espresso);
+  font: 600 12px var(--f-text);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
   transition: transform 0.2s, background 0.2s, color 0.2s;
 }
 .bm-actions a {
-  background: var(--roast);
-  color: var(--butter);
+  background: var(--espresso);
+  color: var(--paper);
 }
 .bm-actions button:hover {
-  background: rgba(59, 35, 20, 0.07);
+  background: var(--espresso);
+  color: var(--paper);
 }
 .bm-actions a:hover {
-  transform: translateY(-2px);
-  background: var(--crust);
-  border-color: var(--crust);
+  background: transparent;
+  color: var(--espresso);
 }
 .bm-actions a.disabled {
   opacity: 0.4;
@@ -146,9 +167,10 @@ body.bm-grabbing {
 /* ---------- the real basket ---------- */
 .bm-basket-wrap {
   position: relative;
+  align-self: center;
   width: 100%;
   max-width: 330px;
-  margin-top: 6px;
+  margin: 10px 0 14px;
   aspect-ratio: 666 / 696;
 }
 .bm-shadow {
@@ -182,6 +204,7 @@ body.bm-grabbing {
 .bm-items {
   position: absolute;
   inset: 0;
+  z-index: 0; /* the treats stack among themselves, then the basket's front goes over all of them */
   pointer-events: none;
 }
 .bm-med {
@@ -193,62 +216,61 @@ body.bm-grabbing {
   position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-  border: clamp(3px, 0.45vw, 4px) solid var(--paper);
-  background: #fff;
-  box-shadow: 0 6px 12px rgba(59, 35, 20, 0.35), 0 0 0 1px rgba(138, 75, 36, 0.2);
   transform: rotate(var(--r, 0deg));
-  animation: bm-drop 0.62s cubic-bezier(0.3, 0.9, 0.4, 1) both;
+  animation: bm-drop 0.5s cubic-bezier(0.3, 0.9, 0.4, 1) both;
 }
+/* the product photo itself (the same cut-out as in the menu), no plate */
 .bm-med-in img,
 .bm-med-in .bm-fallback {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
+.bm-med-in .bm-fallback {
+  border-radius: 50%;
+}
 @keyframes bm-drop {
-  0% { transform: translateY(-90px) scale(1.2) rotate(-10deg); opacity: 0; }
+  0% { transform: translateY(-60px) rotate(calc(var(--r, 0deg) - 6deg)); opacity: 0; }
   30% { opacity: 1; }
-  62% { transform: translateY(7px) scale(0.95) rotate(var(--r, 0deg)); }
-  82% { transform: translateY(-3px) scale(1.03) rotate(var(--r, 0deg)); }
-  100% { transform: translateY(0) scale(1) rotate(var(--r, 0deg)); }
+  100% { transform: translateY(0) rotate(var(--r, 0deg)); }
 }
 .bm-qty {
   position: absolute;
-  top: -6px;
-  right: -8px;
+  top: 30%; /* on the treat itself (its bottom half is tucked behind the cloth) */
+  left: 50%;
+  transform: translateX(-50%) rotate(calc(-1 * var(--r, 0deg)));
   min-width: 26px;
   padding: 2px 6px;
-  border-radius: 999px;
-  background: #c2453a;
-  color: #fff;
+  border-radius: 0;
+  background: var(--espresso);
+  color: var(--paper);
   font: 800 12px/1.3 var(--f-text);
   text-align: center;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 .bm-inner-shade {
   position: absolute;
-  left: 14%;
-  top: 49%;
-  width: 66%;
-  height: 9.2%;
-  background: linear-gradient(to bottom, transparent, rgba(40, 18, 4, 0.45));
+  z-index: 1;
+  left: 40%;
+  top: 54%;
+  width: 54%;
+  height: 7.5%;
+  background: linear-gradient(to bottom, transparent, rgba(40, 18, 4, 0.28));
   pointer-events: none;
 }
 .bm-front {
-  z-index: 0;
+  z-index: 2; /* the cloth fold and wicker sit in front of the treats, so they look tucked in */
 }
 .bm-more {
   position: absolute;
-  left: -2%;
+  right: -2%;
   top: 52%;
   z-index: 6;
   padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--roast);
-  color: var(--butter);
+  border-radius: 0;
+  background: var(--espresso);
+  color: var(--paper);
   font: 700 12px var(--f-text);
 }
 
@@ -264,23 +286,23 @@ body.bm-grabbing {
 .bm-mouth-ring {
   position: absolute;
   inset: -30% -8%;
-  border: 3px dashed rgba(224, 164, 88, 0.95);
+  border: 1px dashed var(--espresso);
   border-radius: 50%;
   opacity: 0;
-  transform: scale(0.9);
-  transition: opacity 0.25s, transform 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
+  transition: opacity 0.25s;
 }
 .bm-mouth-label {
   position: absolute;
   left: 50%;
   top: -190%;
   transform: translateX(-50%);
-  padding: 4px 12px;
-  border-radius: 999px;
+  padding: 4px 10px;
+  border-radius: 0;
   background: var(--espresso);
-  color: var(--gold);
-  font: 700 12px var(--f-text);
-  letter-spacing: 0.04em;
+  color: var(--paper);
+  font: 600 10px var(--f-text);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   white-space: nowrap;
   opacity: 0;
   transition: opacity 0.2s;
@@ -289,164 +311,38 @@ body.bm-grabbing {
 .bm-stage.dragging .bm-mouth-label {
   opacity: 1;
 }
-.bm-stage.dragging .bm-mouth-ring {
-  animation: bm-ring 1.1s ease-in-out infinite;
-}
-@keyframes bm-ring {
-  50% { transform: scale(1.06); }
-}
 .bm-stage.over {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 4px rgba(224, 164, 88, 0.3), 0 34px 60px -30px rgba(59, 35, 20, 0.5);
-}
-.bm-stage.over .bm-basket {
-  filter: drop-shadow(0 0 16px rgba(224, 164, 88, 0.85)) drop-shadow(0 10px 12px rgba(59, 35, 20, 0.28));
+  border-color: var(--espresso);
 }
 .bm-stage.over .bm-mouth-ring {
   border-style: solid;
-  transform: scale(1.14);
-  box-shadow: 0 0 28px rgba(224, 164, 88, 0.7), inset 0 0 22px rgba(224, 164, 88, 0.5);
-}
-.bm-stage.over .bm-mouth-label {
-  background: var(--gold);
-  color: var(--espresso);
 }
 .bm-basket.squash {
-  animation: bm-squash 0.62s cubic-bezier(0.3, 1, 0.5, 1);
+  animation: bm-squash 0.45s ease-out;
 }
 @keyframes bm-squash {
   0% { transform: scale(1, 1); }
-  22% { transform: scale(1.06, 0.92); }
-  48% { transform: scale(0.98, 1.05); }
-  72% { transform: scale(1.015, 0.99); }
+  35% { transform: scale(1.015, 0.985); }
   100% { transform: scale(1, 1); }
 }
 
-/* warm steam once there is something in the basket */
-.bm-steam {
-  position: absolute;
-  left: 30%;
-  top: 6%;
-  width: 36%;
-  height: 40%;
-  opacity: 0;
-  transition: opacity 0.6s;
-  pointer-events: none;
-  z-index: 4;
-}
-.bm-stage.filled .bm-steam {
-  opacity: 1;
-}
-.bm-steam path {
-  fill: none;
-  stroke: rgba(138, 75, 36, 0.35);
-  stroke-width: 5;
-  stroke-linecap: round;
-  stroke-dasharray: 90 160;
-  animation: bm-steam 3.4s ease-in-out infinite;
-  filter: blur(1.4px);
-}
-.bm-steam path:nth-child(2) { animation-delay: -1.1s; }
-.bm-steam path:nth-child(3) { animation-delay: -2.2s; }
-@keyframes bm-steam {
-  0% { stroke-dashoffset: 160; opacity: 0; }
-  30% { opacity: 0.9; }
-  100% { stroke-dashoffset: -90; opacity: 0; }
-}
-
-/* the paper tag tied to the handle */
-.bm-tag {
-  position: absolute;
-  left: calc(81% - 40px);
-  top: calc(20% + 28px);
-  z-index: 7;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  width: 80px;
-  padding: 14px 6px 8px;
-  border: 1px solid #ead7ad;
-  border-radius: 6px 6px 12px 12px;
-  background: linear-gradient(#fffdf6, #f4e4bf);
-  color: var(--espresso);
-  font-family: var(--f-text);
-  cursor: pointer;
-  transform-origin: 50% -26px;
-  box-shadow: 0 8px 14px rgba(59, 35, 20, 0.22);
-  animation: bm-idle 5s ease-in-out infinite;
-}
-.bm-tag::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: -30px;
-  width: 2px;
-  height: 36px;
-  background: #c98f4b;
-  transform: translateX(-50%);
-}
-.bm-tag-hole {
-  position: absolute;
-  left: 50%;
-  top: 4px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--roast);
-  transform: translateX(-50%);
-}
-.bm-tag-n {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--crust);
-}
-.bm-tag-total {
-  font: 600 19px/1.1 var(--f-display);
-}
-.bm-tag-total small {
-  font: 700 9px var(--f-text);
-  color: var(--crust);
-}
-@keyframes bm-idle {
-  0%, 100% { transform: rotate(-2.5deg); }
-  50% { transform: rotate(2.5deg); }
-}
-.bm-tag.swing {
-  animation: bm-swing 1.3s cubic-bezier(0.25, 0.6, 0.3, 1), bm-idle 5s 1.3s ease-in-out infinite;
-}
-@keyframes bm-swing {
-  0% { transform: rotate(0); }
-  15% { transform: rotate(-24deg); }
-  35% { transform: rotate(16deg); }
-  55% { transform: rotate(-9deg); }
-  75% { transform: rotate(5deg); }
-  100% { transform: rotate(-2.5deg); }
-}
-
-/* suggestion bubble */
+/* "Pairs well with": a quiet row above the buttons */
 .bm-bubble {
   position: relative;
-  order: 5;
-  width: 100%;
-  margin: 0 0 10px;
-  z-index: 8;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px 8px 8px;
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 14px 30px rgba(59, 35, 20, 0.28);
+  gap: 12px;
+  width: 100%;
+  margin: 0 0 14px;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--latte);
   font-family: var(--f-text);
-  animation: bm-in 0.5s cubic-bezier(0.3, 1.5, 0.5, 1);
+  animation: bm-in 0.35s ease-out;
 }
 .bm-bubble-img {
   flex: none;
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -459,80 +355,61 @@ body.bm-grabbing {
 }
 .bm-bubble small {
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--crust);
+  color: #9b7b62;
 }
 .bm-bubble strong {
   overflow: hidden;
-  font: 400 15px var(--f-display);
+  font: 500 17px var(--f-display);
+  font-size-adjust: none;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .bm-bubble span {
-  font-size: 12px;
-  color: var(--crust);
+  font-size: 13px;
+  color: #9b7b62;
 }
 .bm-bubble-add {
-  padding: 8px 14px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--roast);
-  color: var(--butter);
-  font: 700 13px var(--f-text);
+  padding: 7px 12px;
+  border: 1px solid var(--espresso);
+  border-radius: 0;
+  background: transparent;
+  color: var(--espresso);
+  font: 600 10px var(--f-text);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.bm-bubble-add:hover {
+  background: var(--espresso);
+  color: var(--paper);
 }
 .bm-bubble-x {
   border: 0;
   background: none;
-  color: var(--crust);
-  font-size: 20px;
+  color: #9b7b62;
+  font-size: 18px;
   cursor: pointer;
 }
 @keyframes bm-in {
-  0% { transform: translateY(-10px) scale(0.92); opacity: 0; }
+  0% { transform: translateY(-4px); opacity: 0; }
   100% { transform: none; opacity: 1; }
 }
 
-/* crumbs + one-off bursts */
-.bm-particles {
-  position: absolute;
-  inset: 0;
-  z-index: 9;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-.bm-ripple {
-  position: absolute;
-  z-index: 8;
-  width: 40px;
-  height: 14px;
-  margin: -7px 0 0 -20px;
-  border: 3px solid rgba(224, 164, 88, 0.9);
-  border-radius: 50%;
-  pointer-events: none;
-  animation: bm-ripple 0.8s ease-out forwards;
-}
-.bm-ripple2 {
-  animation-delay: 0.12s;
-  opacity: 0;
-}
-@keyframes bm-ripple {
-  0% { transform: scale(0.4); opacity: 0.95; }
-  100% { transform: scale(6, 3.4); opacity: 0; }
-}
 .bm-float {
   position: absolute;
   z-index: 10;
   max-width: 90%;
   transform: translateX(-50%);
-  padding: 5px 13px;
-  border-radius: 999px;
-  background: var(--roast);
-  color: var(--butter);
-  font: 700 13px var(--f-text);
+  padding: 4px 10px;
+  border-radius: 0;
+  background: var(--espresso);
+  color: var(--paper);
+  font: 600 11px var(--f-text);
+  letter-spacing: 0.08em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -540,9 +417,9 @@ body.bm-grabbing {
   animation: bm-float 1.3s ease-out forwards;
 }
 @keyframes bm-float {
-  0% { transform: translate(-50%, 0) scale(0.7); opacity: 0; }
-  15% { transform: translate(-50%, -12px) scale(1.05); opacity: 1; }
-  100% { transform: translate(-50%, -64px) scale(1); opacity: 0; }
+  0% { transform: translate(-50%, 0); opacity: 0; }
+  15% { transform: translate(-50%, -8px); opacity: 1; }
+  100% { transform: translate(-50%, -40px); opacity: 0; }
 }
 
 /* what you carry while dragging */
@@ -552,13 +429,9 @@ body.bm-grabbing {
   top: 0;
   z-index: 1000;
   display: none;
-  width: 108px;
-  height: 108px;
-  overflow: hidden;
-  border: 5px solid var(--paper);
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 22px 34px rgba(59, 35, 20, 0.4), 0 0 0 2px rgba(224, 164, 88, 0.7);
+  width: 120px;
+  height: 120px;
+  filter: drop-shadow(0 16px 18px rgba(59, 35, 20, 0.3));
   pointer-events: none;
   will-change: transform;
 }
@@ -566,8 +439,11 @@ body.bm-grabbing {
 .bm-ghost .bm-fallback {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+}
+.bm-ghost .bm-fallback {
+  border-radius: 50%;
 }
 .bm-fallback {
   display: grid;
@@ -592,7 +468,7 @@ body.bm-grabbing {
   height: 46px;
   padding: 0 18px;
   border: 1px solid var(--latte);
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--paper);
 }
 .bm-search span {
@@ -609,24 +485,26 @@ body.bm-grabbing {
   font: 500 15px var(--f-text);
 }
 .bm-search:focus-within {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(224, 164, 88, 0.3);
+  border-color: var(--espresso);
+  box-shadow: none;
 }
 .bm-surprise {
   flex: none;
   height: 46px;
   padding: 0 22px;
-  border: 0;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--gold), #d4782f);
-  color: var(--espresso);
-  font: 700 14px var(--f-text);
+  border: 1px solid var(--espresso);
+  border-radius: 0;
+  background: var(--espresso);
+  color: var(--paper);
+  font: 600 12px var(--f-text);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(212, 120, 47, 0.3);
-  transition: transform 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
 .bm-surprise:hover {
-  transform: translateY(-2px) rotate(-1deg);
+  background: transparent;
+  color: var(--espresso);
 }
 .bm-menu .bk-cats {
   margin-bottom: 28px;
@@ -649,7 +527,7 @@ body.bm-grabbing {
 }
 .bm-menu .bk-cats em {
   padding: 1px 8px;
-  border-radius: 999px;
+  border-radius: 0;
   background: rgba(138, 75, 36, 0.12);
   font-size: 11px;
   font-style: normal;
@@ -797,7 +675,7 @@ body.bm-grabbing {
   height: 44px;
   font: 400 25px/1 var(--f-text);
   font-size-adjust: none;
-  box-shadow: 0 6px 14px rgba(36, 20, 12, 0.25);
+  box-shadow: 0 4px 10px rgba(36, 20, 12, 0.18);
   opacity: 0;
   transform: scale(0.8);
   transition: opacity 0.2s, transform 0.2s, background 0.25s;
@@ -888,9 +766,9 @@ body.bm-grabbing {
 .bm-x {
   width: 38px;
   height: 38px;
-  border: 1px solid var(--latte);
-  border-radius: 50%;
-  background: #fff;
+  border: 1px solid var(--espresso);
+  border-radius: 0;
+  background: transparent;
   color: var(--espresso);
   font-size: 22px;
   cursor: pointer;
@@ -960,23 +838,25 @@ body.bm-grabbing {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 3px;
-  border-radius: 999px;
-  background: var(--latte);
+  padding: 0;
+  border: 1px solid var(--espresso);
+  border-radius: 0;
+  background: transparent;
 }
 .bm-stepper button {
   width: 26px;
   height: 26px;
   border: 0;
-  border-radius: 50%;
-  background: #fff;
+  border-radius: 0;
+  background: transparent;
   color: var(--espresso);
   font-size: 16px;
   line-height: 1;
   cursor: pointer;
 }
 .bm-stepper button:hover {
-  background: var(--gold);
+  background: var(--espresso);
+  color: var(--paper);
 }
 .bm-stepper span {
   min-width: 22px;
@@ -987,6 +867,7 @@ body.bm-grabbing {
 .bm-line-total {
   min-width: 52px;
   font-size: 15px;
+  white-space: nowrap;
   text-align: right;
 }
 .bm-panel-foot {
@@ -1021,11 +902,13 @@ body.bm-grabbing {
 }
 .bm-ghost-btn {
   padding: 0 16px;
-  border: 1px solid var(--latte);
-  border-radius: 999px;
+  border: 1px solid var(--espresso);
+  border-radius: 0;
   background: transparent;
-  color: var(--crust);
-  font: 600 13px var(--f-text);
+  color: var(--espresso);
+  font: 600 11px var(--f-text);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   cursor: pointer;
 }
 .bm-ghost-btn:disabled {
@@ -1037,17 +920,19 @@ body.bm-grabbing {
   flex: 1;
   place-items: center;
   height: 50px;
-  border-radius: 999px;
-  background: var(--roast);
-  color: var(--butter);
-  font: 700 15px var(--f-text);
+  border: 1px solid var(--espresso);
+  border-radius: 0;
+  background: var(--espresso);
+  color: var(--paper);
+  font: 600 13px var(--f-text);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   text-decoration: none;
-  box-shadow: 0 10px 22px rgba(59, 35, 20, 0.35);
-  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
 .bm-checkout:hover {
-  transform: translateY(-2px);
-  background: var(--crust);
+  background: transparent;
+  color: var(--espresso);
 }
 .bm-checkout.disabled {
   opacity: 0.4;
@@ -1067,9 +952,9 @@ body.bm-grabbing {
 }
 .bm-card .bk-img .bm-ribbon.bm-soldout {
   padding: 2px 10px;
-  border-radius: 999px;
-  background: var(--roast);
-  color: var(--butter);
+  border-radius: 0;
+  background: var(--espresso);
+  color: var(--paper);
 }
 
 /* product names in the basket drawer link to the detail page */
@@ -1096,38 +981,51 @@ body.bm-grabbing {
   .bm-stage {
     top: 56px;
     z-index: 6;
+    display: grid;
+    grid-template-columns: 132px minmax(0, 1fr);
+    grid-template-areas:
+      'basket head'
+      'basket sum';
+    align-items: center;
+    column-gap: 18px;
     margin: 0 -28px 22px;
-    padding: 10px 16px 14px;
+    padding: 10px 20px 12px;
     border-width: 0 0 1px;
-    border-radius: 0 0 28px 28px;
-    box-shadow: 0 18px 30px -18px rgba(59, 35, 20, 0.45);
   }
-  .bm-eyebrow,
-  .bm-hint,
+  .bm-head {
+    grid-area: head;
+    align-self: end;
+    padding-bottom: 8px;
+  }
+  .bm-eyebrow {
+    font-size: 21px;
+  }
+  .bm-basket-wrap {
+    grid-area: basket;
+    width: 132px;
+    max-width: none;
+    margin: 0;
+  }
+  .bm-summary,
+  .bm-hint {
+    grid-area: sum;
+    align-self: start;
+    padding: 8px 0 0;
+    border-top: 0;
+  }
+  .bm-hint {
+    font-size: 13px;
+    text-align: left;
+  }
+  .bm-sum-total {
+    font-size: 26px;
+  }
   .bm-actions {
     display: none;
   }
-  .bm-sound {
-    top: 10px;
-    right: 14px;
-  }
-  .bm-basket-wrap {
-    width: auto;
-    max-width: none;
-    height: 190px;
-    margin-top: 0;
-  }
-  .bm-tag {
-    width: 76px;
-  }
+  /* the strip stays pinned while you scroll, so keep it short: no suggestion row on phones */
   .bm-bubble {
-    position: absolute;
-    order: 0;
-    left: 14px;
-    right: 14px;
-    bottom: 10px;
-    width: auto;
-    margin: 0;
+    display: none;
   }
 }
 @media (max-width: 600px) {
@@ -1186,9 +1084,9 @@ body.bm-grabbing {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .bm-steam path,
   .bm-ribbon,
-  .bm-tag {
+  .bm-float,
+  .bm-basket.squash {
     animation: none !important;
   }
 }
